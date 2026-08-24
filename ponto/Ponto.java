@@ -1,3 +1,4 @@
+package ponto;
 
 public class Ponto {
     private double x;
@@ -13,6 +14,15 @@ public class Ponto {
         setY(0);
     }
 
+    /**
+    * Construtor do Ponto mais generico
+    */
+    public Ponto(double x1,double y1)
+    {
+        setX(x1);
+        setY(y1);
+    }
+    
     /**
      * Define o valor de x
      */
@@ -44,6 +54,13 @@ public class Ponto {
         return y;
     }
 
+    public double calcularDistancia(Ponto p) {
+    
+        double d = Math.sqrt(Math.pow(p.getY()-getY(), 2) + Math.pow(p.getX()-getX(), 2));
+        return(d);
+
+    }
+    
     /**
      * Imprime as coordenadas no formato [x , y]
      *
