@@ -10,71 +10,62 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 /**
- * Cria desenhos de acordo com o tipo e eventos do mouse.
- *
- * Todos os primitivos sao construidos a partir dos pontos clicados
- * na tela: o PONTO precisa de 1 clique; os demais (Reta, Circulo,
- * Retangulo, Triangulo) precisam de 2 cliques (ponto1 e ponto2).
- * Cada figura concluida e guardada na lista "figuras", o que permite
- * que varias figuras fiquem acumuladas corretamente na tela.
- * 
- * @author Julio Arakaki 
- * @version 20260823
+ * Painel responsavel por receber os cliques do usuario, criar os primitivos,
+ * armazena-los na ED e desenhar somente os elementos atualmente visiveis.
  */
+@SuppressWarnings("serial")
 public class PainelDesenho extends JPanel implements MouseListener, MouseMotionListener {
+    private JLabel msg;
+    private TipoPrimitivo tipo;
+    private Color corAtual;
+    private int esp;
 
-    private JLabel msg;           // Label para mensagens
-    private TipoPrimitivo tipo;   // Tipo do primitivo selecionado
-    private Color corAtual;       // Cor atual do primitivo
-    private int esp;              // Espessura atual do primitivo
-
-    // Todas as figuras ja concluidas e desenhadas no painel
-    private List<FiguraDesenhada> figuras = new ArrayList<>();
-
-    // Guarda o 1o ponto clicado, aguardando o 2o (null = nenhum clique pendente)
-    private Integer x1, y1;
+    /** Estrutura de dados permanente do editor. */
+    private final RepositorioPrimitivos repositorio = new RepositorioPrimitivos();
 
     /**
-     * Constroi o painel de desenho
-     *
-     * @param msg mensagem a ser escrita no rodape do painel
-     * @param tipo tipo atual do primitivo
-     * @param corAtual cor atual do primitivo
-     * @param esp espessura atual do primitivo
+     * Lista apenas de exibicao. O botao Limpar esvazia esta lista, mas nunca a ED.
      */
+    private final List<PrimitivoArmazenado> visiveis = new ArrayList<>();
+
+    /** Pontos temporarios do primitivo que ainda esta sendo construido. */
+    private final List<Integer> xsPendentes = new ArrayList<>();
+    private final List<Integer> ysPendentes = new ArrayList<>();
+
     public PainelDesenho(JLabel msg, TipoPrimitivo tipo, Color corAtual, int esp) {
+        setBackground(Color.WHITE);
         setTipo(tipo);
         setMsg(msg);
         setCorAtual(corAtual);
         setEsp(esp);
-
-        this.addMouseListener(this);
-        this.addMouseMotionListener(this);
+        addMouseListener(this);
+        addMouseMotionListener(this);
     }
 
     public void setTipo(TipoPrimitivo tipo) {
-        this.tipo = tipo;
-        cancelarSelecao(); // troca de tipo cancela um 1o clique pendente
+        this.tipo = tipo == null ? TipoPrimitivo.NENHUM : tipo;
+        cancelarSelecao();
+        atualizarMensagem("Ferramenta: " + this.tipo);
     }
 
     public TipoPrimitivo getTipo() {
-        return this.tipo;
+        return tipo;
     }
 
     public void setEsp(int esp) {
-        this.esp = esp;
+        this.esp = Math.max(1, esp);
     }
 
     public int getEsp() {
-        return this.esp;
+        return esp;
     }
 
     public void setCorAtual(Color corAtual) {
-        this.corAtual = corAtual;
+        this.corAtual = corAtual == null ? Color.BLACK : corAtual;
     }
 
     public Color getCorAtual() {
-        return this.corAtual;
+        return corAtual;
     }
 
     public void setMsg(JLabel msg) {
@@ -82,95 +73,107 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     }
 
     public JLabel getMsg() {
-        return this.msg;
+        return msg;
+    }
+
+    public RepositorioPrimitivos getRepositorio() {
+        return repositorio;
     }
 
     /**
-     * Remove todas as figuras ja desenhadas e limpa o painel.
+     * Limpa SOMENTE a tela. A ED continua intacta, como pede o enunciado.
      */
     public void limpar() {
-        figuras.clear();
+        visiveis.clear();
         cancelarSelecao();
         repaint();
+        atualizarMensagem("Tela limpa. A ED continua com " + repositorio.quantidadeTotal() + " primitivo(s).");
+    }
+
+    /**
+     * Redesenha na tela os primitivos armazenados que correspondem ao filtro.
+     */
+    public void redesenhar(TipoPrimitivo filtro) {
+        visiveis.clear();
+        visiveis.addAll(repositorio.filtrar(filtro));
+        cancelarSelecao();
+        repaint();
+
+        String nomeFiltro = filtro == null ? TipoPrimitivo.TODOS.toString() : filtro.toString();
+        atualizarMensagem("Redesenho: " + nomeFiltro + " - " + visiveis.size()
+                + " visivel(is) / " + repositorio.quantidadeTotal() + " na ED.");
     }
 
     private void cancelarSelecao() {
-        x1 = null;
-        y1 = null;
+        xsPendentes.clear();
+        ysPendentes.clear();
     }
 
-    /**
-     * Repinta todas as figuras acumuladas na lista.
-     *
-     * @param g biblioteca para desenhar em modo grafico
-     */
+    private void atualizarMensagem(String texto) {
+        if (msg != null) {
+            msg.setText(" " + texto);
+        }
+    }
+
     @Override
-    public void paintComponent(Graphics g) {
+    protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        for (FiguraDesenhada f : figuras) {
-            f.desenhar(g);
+        for (PrimitivoArmazenado primitivo : visiveis) {
+            primitivo.desenhar(g);
         }
     }
 
     /**
-     * Evento: pressionar do mouse. PONTO conclui com 1 clique;
-     * os demais tipos precisam de um 1o e um 2o clique.
-     *
-     * @param e dados do evento
+     * Registra um clique. Quando a quantidade de pontos necessaria para a
+     * ferramenta atual e atingida, o primitivo e criado e adicionado a ED.
      */
     @Override
     public void mousePressed(MouseEvent e) {
-        if (tipo == null || tipo == TipoPrimitivo.NENHUM) {
+        if (tipo == null || !tipo.ehPrimitivoDesenhavel()) {
+            atualizarMensagem("Selecione Ponto, Reta, Circulo, Retangulo ou Triangulo.");
             return;
         }
 
-        if (tipo == TipoPrimitivo.PONTO) {
-            figuras.add(new FiguraDesenhada(tipo, e.getX(), e.getY(), e.getX(), e.getY(), corAtual, esp));
-            repaint();
+        xsPendentes.add(e.getX());
+        ysPendentes.add(e.getY());
+
+        int necessarios = tipo.getCliquesNecessarios();
+        if (xsPendentes.size() < necessarios) {
+            atualizarMensagem(tipo + ": ponto " + xsPendentes.size() + "/" + necessarios
+                    + " registrado. Aguardando proximo clique.");
             return;
         }
 
-        if (x1 == null) {
-            // 1o clique: apenas guarda o ponto, aguarda o 2o
-            x1 = e.getX();
-            y1 = e.getY();
-        } else {
-            // 2o clique: figura completa, adiciona a lista
-            figuras.add(new FiguraDesenhada(tipo, x1, y1, e.getX(), e.getY(), corAtual, esp));
-            cancelarSelecao();
-            repaint();
+        int[] xs = new int[necessarios];
+        int[] ys = new int[necessarios];
+        for (int i = 0; i < necessarios; i++) {
+            xs[i] = xsPendentes.get(i);
+            ys[i] = ysPendentes.get(i);
         }
+
+        FiguraDesenhada figura = new FiguraDesenhada(tipo, xs, ys, corAtual, esp);
+        PrimitivoArmazenado armazenado = repositorio.adicionar(figura);
+        visiveis.add(armazenado);
+
+        cancelarSelecao();
+        repaint();
+        atualizarMensagem(tipo + " armazenado. Total na ED: " + repositorio.quantidadeTotal() + ".");
     }
 
-    @Override
-    public void mouseReleased(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseDragged(MouseEvent e) {
-    }
-
-    /**
-     * Evento mouseMoved: escreve mensagem no rodape (x, y) do mouse,
-     * indicando tambem se ha um 1o clique pendente aguardando o 2o.
-     *
-     * @param e dados do evento do mouse
-     */
     @Override
     public void mouseMoved(MouseEvent e) {
-        String aguardando = (x1 != null) ? " - aguardando 2\u00ba ponto..." : "";
-        this.msg.setText("(" + e.getX() + ", " + e.getY() + ") - " + getTipo() + aguardando);
+        int feitos = xsPendentes.size();
+        String aguardando = "";
+        if (tipo != null && tipo.ehPrimitivoDesenhavel() && feitos > 0) {
+            aguardando = " - pontos: " + feitos + "/" + tipo.getCliquesNecessarios();
+        }
+        atualizarMensagem("(" + e.getX() + ", " + e.getY() + ") - " + tipo + aguardando
+                + " - ED: " + repositorio.quantidadeTotal());
     }
+
+    @Override public void mouseReleased(MouseEvent e) { }
+    @Override public void mouseClicked(MouseEvent e) { }
+    @Override public void mouseEntered(MouseEvent e) { }
+    @Override public void mouseExited(MouseEvent e) { }
+    @Override public void mouseDragged(MouseEvent e) { }
 }

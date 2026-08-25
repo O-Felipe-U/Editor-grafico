@@ -8,61 +8,95 @@ import retangulo.FiguraRetangulos;
 import triangulo.FiguraTriangulos;
 
 /**
- * Representa UMA figura ja desenhada no painel: guarda o tipo do
- * primitivo, os dois pontos que a originaram (ponto1 e ponto2),
- * a cor e a espessura usadas. Sabe se autodesenhar delegando para
- * a classe do pacote correspondente ao tipo.
+ * Representa um primitivo grafico concluido.
  *
- * Guardar as figuras (em vez de so os ultimos x,y usados) e o que
- * permite que varias figuras fiquem acumuladas corretamente na tela
- * e sejam redesenhadas sempre que o painel precisar repintar.
- *
- * @author Julio Arakaki 
- * @version 20260823
+ * A classe guarda o tipo, os pontos de construcao, a cor e a espessura.
+ * Ela tambem sabe redesenhar o primitivo delegando ao algoritmo do pacote
+ * correspondente. Isso permite que o mesmo objeto seja armazenado na ED e
+ * redesenhado quantas vezes forem necessarias.
  */
 public class FiguraDesenhada {
+    private final TipoPrimitivo tipo;
+    private final int[] xs;
+    private final int[] ys;
+    private final Color cor;
+    private final int esp;
 
-    private TipoPrimitivo tipo;
-    private int x1, y1; // 1o ponto clicado
-    private int x2, y2; // 2o ponto clicado (== 1o ponto, no caso do PONTO)
-    private Color cor;
-    private int esp;
+    /**
+     * Cria uma figura a partir de um ou mais pontos.
+     */
+    public FiguraDesenhada(TipoPrimitivo tipo, int[] xs, int[] ys, Color cor, int esp) {
+        if (tipo == null || !tipo.ehPrimitivoDesenhavel()) {
+            throw new IllegalArgumentException("Tipo invalido para uma figura desenhada.");
+        }
+        if (xs == null || ys == null || xs.length != ys.length) {
+            throw new IllegalArgumentException("Coordenadas invalidas.");
+        }
+        if (xs.length != tipo.getCliquesNecessarios()) {
+            throw new IllegalArgumentException(
+                    tipo + " precisa de " + tipo.getCliquesNecessarios() + " ponto(s)."
+            );
+        }
 
-    public FiguraDesenhada(TipoPrimitivo tipo, int x1, int y1, int x2, int y2, Color cor, int esp) {
         this.tipo = tipo;
-        this.x1 = x1;
-        this.y1 = y1;
-        this.x2 = x2;
-        this.y2 = y2;
-        this.cor = cor;
-        this.esp = esp;
+        this.xs = xs.clone();
+        this.ys = ys.clone();
+        this.cor = cor == null ? Color.BLACK : cor;
+        this.esp = Math.max(1, esp);
+    }
+
+    public TipoPrimitivo getTipo() {
+        return tipo;
+    }
+
+    public Color getCor() {
+        return cor;
+    }
+
+    public int getEspessura() {
+        return esp;
+    }
+
+    public int getQuantidadePontos() {
+        return xs.length;
+    }
+
+    public int getX(int indice) {
+        return xs[indice];
+    }
+
+    public int getY(int indice) {
+        return ys[indice];
     }
 
     /**
-     * Desenha esta figura, delegando para a classe responsavel
-     * pelo seu tipo de primitivo.
-     *
-     * @param g biblioteca para desenhar em modo grafico
+     * Desenha esta figura usando o algoritmo implementado para o seu tipo.
      */
     public void desenhar(Graphics g) {
         switch (tipo) {
             case PONTO:
-                FiguraPontos.desenharPonto(g, x1, y1, "", esp, cor);
+                FiguraPontos.desenharPonto(g, xs[0], ys[0], "", esp, cor);
                 break;
             case RETA:
-                FiguraRetas.desenharReta(g, x1, y1, x2, y2, "", esp, cor);
+                FiguraRetas.desenharReta(g, xs[0], ys[0], xs[1], ys[1], "", esp, cor);
                 break;
             case CIRCULO:
-                FiguraCirculos.desenharCirculo(g, x1, y1, x2, y2, "", esp, cor);
+                FiguraCirculos.desenharCirculo(g, xs[0], ys[0], xs[1], ys[1], "", esp, cor);
                 break;
             case RETANGULO:
-                FiguraRetangulos.desenharRetangulo(g, x1, y1, x2, y2, "", esp, cor);
+                FiguraRetangulos.desenharRetangulo(g, xs[0], ys[0], xs[1], ys[1], "", esp, cor);
                 break;
             case TRIANGULO:
-                FiguraTriangulos.desenharTriangulo(g, x1, y1, x2, y2, "", esp, cor);
+                FiguraTriangulos.desenharTriangulo(
+                        g,
+                        xs[0], ys[0],
+                        xs[1], ys[1],
+                        xs[2], ys[2],
+                        "", esp, cor
+                );
                 break;
             default:
-                break;
+                throw new IllegalStateException("Tipo nao desenhavel: " + tipo);
         }
     }
 }

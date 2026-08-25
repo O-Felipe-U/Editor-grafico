@@ -1,129 +1,132 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JColorChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JToolBar;
 
-@SuppressWarnings("serial")
 /**
- * Cria a interface com o usuario (GUI)
- * 
- * @author Julio Arakaki 
- * @version 20260823
+ * Interface grafica do editor de primitivos.
+ *
+ * Permite selecionar a ferramenta, cor e espessura; limpar somente a tela;
+ * e testar a ED redesenhando todos os primitivos ou apenas um tipo especifico.
  */
-class Gui extends JFrame {
-    // Tipo Atual de primitivo
+@SuppressWarnings("serial")
+public class Gui extends JFrame {
     private TipoPrimitivo tipoAtual = TipoPrimitivo.NENHUM;
-
-    // Cor atual
     private Color corAtual = Color.BLACK;
-
-    // Espessura atual do primitivo
     private int espAtual = 1;
 
-    // Componentes de GUI
-    // barra de menu (inserir componente)
-    private JToolBar barraComandos = new JToolBar();
+    private final JToolBar barraComandos = new JToolBar();
+    private final JLabel msg = new JLabel(" Selecione uma ferramenta.");
+    private final PainelDesenho areaDesenho = new PainelDesenho(msg, tipoAtual, corAtual, espAtual);
 
-    // mensagens
-    private JLabel msg = new JLabel("Msg: ");
+    private final JButton jbPonto = new JButton("Ponto");
+    private final JButton jbReta = new JButton("Reta");
+    private final JButton jbCirculo = new JButton("Circulo");
+    private final JButton jbRetangulo = new JButton("Retangulo");
+    private final JButton jbTriangulo = new JButton("Triangulo");
+    private final JButton jbLimpar = new JButton("Limpar tela");
+    private final JButton jbCor = new JButton("Cor");
+    private final JButton jbSair = new JButton("Sair");
 
-    // Painel de desenho
-    private PainelDesenho areaDesenho = new PainelDesenho(msg, tipoAtual, corAtual, 10);
+    private final JLabel jlEsp = new JLabel(" Espessura: 1 ");
+    private final JSlider jsEsp = new JSlider(1, 20, 1);
 
-    // Botoes
-    private JButton jbPonto = new JButton("Ponto");
-    private JButton jbReta = new JButton("Reta");
-    private JButton jbCirculo = new JButton("Circulo");
-    private JButton jbRetangulo = new JButton("Retangulo");
-    private JButton jbTriangulo = new JButton("Triangulo");
-    private JButton jbLimpar = new JButton("Limpar");
-    private JButton jbCor = new JButton("Cor");
-    private JButton jbSair = new JButton("Sair");
+    private final JComboBox<TipoPrimitivo> cbRedesenhar = new JComboBox<>(new TipoPrimitivo[] {
+            TipoPrimitivo.TODOS,
+            TipoPrimitivo.PONTO,
+            TipoPrimitivo.RETA,
+            TipoPrimitivo.CIRCULO,
+            TipoPrimitivo.RETANGULO,
+            TipoPrimitivo.TRIANGULO
+    });
+    private final JButton jbRedesenhar = new JButton("Redesenhar");
 
-    // Entrada (slider) para definir espessura dos primitivos
-    private JLabel jlEsp = new JLabel("   Espessura: " + String.format("%-5s", 1));
-    private JSlider jsEsp = new JSlider(1, 50, 1);
-
-    /**
-     * Constroi a GUI
-     *
-     * @param larg largura da janela
-     * @param alt altura da janela
-     */
     public Gui(int larg, int alt) {
-        /**
-         * Definicoes de janela
-         */
-        super("Testa Primitivos");
+        super("Editor Grafico - Primitivos");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(larg, alt);
-        setVisible(true);
-        setResizable(false);
+        setMinimumSize(new Dimension(850, 600));
+        setLocationRelativeTo(null);
 
-        // Adicionando os componentes
+        montarInterface();
+        configurarEventos();
+
+        setVisible(true);
+    }
+
+    private void montarInterface() {
+        barraComandos.setFloatable(false);
         barraComandos.add(jbPonto);
         barraComandos.add(jbReta);
         barraComandos.add(jbCirculo);
         barraComandos.add(jbRetangulo);
         barraComandos.add(jbTriangulo);
-        barraComandos.add(jbLimpar); // Botao de Limpar
-        barraComandos.add(jbCor); // Botao de Cores
+        barraComandos.addSeparator();
+        //barraComandos.add(jbCor);
+        barraComandos.add(jlEsp);
+        jsEsp.setPreferredSize(new Dimension(100, 30));
+        barraComandos.add(jsEsp);
+        barraComandos.addSeparator();
+        barraComandos.add(jbLimpar);
+        barraComandos.addSeparator();
+        barraComandos.add(jbSair);
 
-        barraComandos.add(jlEsp); // Label para espessura
-        barraComandos.add(jsEsp);    // Slider para espacamento
-        areaDesenho.setEsp(espAtual); // define a espessura inicial
-        barraComandos.add(jbSair); // Botao de Sair
+        JPanel painelRedesenho = new JPanel();
+        painelRedesenho.add(new JLabel("Redesenhar da ED:"));
+        painelRedesenho.add(cbRedesenhar);
+        painelRedesenho.add(jbRedesenhar);
 
-        // adiciona os componentes com os respectivos layouts
-        add(barraComandos, BorderLayout.NORTH);                
-        add(areaDesenho, BorderLayout.CENTER);                
+        JPanel topo = new JPanel(new BorderLayout());
+        topo.add(barraComandos, BorderLayout.NORTH);
+        topo.add(painelRedesenho, BorderLayout.SOUTH);
+
+        add(topo, BorderLayout.NORTH);
+        add(areaDesenho, BorderLayout.CENTER);
         add(msg, BorderLayout.SOUTH);
+    }
 
-        // Adiciona "tratador" ("ouvidor") de eventos para 
-        // cada componente
-        jbPonto.addActionListener(e -> {
-            tipoAtual = TipoPrimitivo.PONTO;
-            areaDesenho.setTipo(tipoAtual);
-        });        
-        jbReta.addActionListener(e -> {
-            tipoAtual = TipoPrimitivo.RETA;
-            areaDesenho.setTipo(tipoAtual);
-        });        
-        jbCirculo.addActionListener(e -> {
-            tipoAtual = TipoPrimitivo.CIRCULO;
-            areaDesenho.setTipo(tipoAtual);
+    private void configurarEventos() {
+        jbPonto.addActionListener(e -> selecionarTipo(TipoPrimitivo.PONTO));
+        jbReta.addActionListener(e -> selecionarTipo(TipoPrimitivo.RETA));
+        jbCirculo.addActionListener(e -> selecionarTipo(TipoPrimitivo.CIRCULO));
+        jbRetangulo.addActionListener(e -> selecionarTipo(TipoPrimitivo.RETANGULO));
+        jbTriangulo.addActionListener(e -> selecionarTipo(TipoPrimitivo.TRIANGULO));
+
+        jbLimpar.addActionListener(e -> areaDesenho.limpar());
+
+        jbRedesenhar.addActionListener(e -> {
+            TipoPrimitivo filtro = (TipoPrimitivo) cbRedesenhar.getSelectedItem();
+            areaDesenho.redesenhar(filtro);
         });
-        jbRetangulo.addActionListener(e -> {
-            tipoAtual = TipoPrimitivo.RETANGULO;
-            areaDesenho.setTipo(tipoAtual);
-        });
-        jbTriangulo.addActionListener(e -> {
-            tipoAtual = TipoPrimitivo.TRIANGULO;
-            areaDesenho.setTipo(tipoAtual);
-        });
-        jbLimpar.addActionListener(e -> {
-            areaDesenho.limpar(); // limpa de fato a lista de figuras desenhadas
-        });        
+
         jbCor.addActionListener(e -> {
-            Color c = JColorChooser.showDialog(null, "Escolha uma cor", msg.getForeground()); 
-            if (c != null){ 
-                corAtual = c; // pega do chooserColor 
+            Color escolhida = JColorChooser.showDialog(this, "Escolha uma cor", corAtual);
+            if (escolhida != null) {
+                corAtual = escolhida;
+                areaDesenho.setCorAtual(corAtual);
+                jbCor.setForeground(corAtual);
             }
-            areaDesenho.setCorAtual(corAtual); // cor atual
-        });  
+        });
+
         jsEsp.addChangeListener(e -> {
             espAtual = jsEsp.getValue();
-            jlEsp.setText("   Espessura: " + String.format("%-5s", espAtual));
-            areaDesenho.setEsp(espAtual);        
-        });        
+            jlEsp.setText(" Espessura: " + espAtual + " ");
+            areaDesenho.setEsp(espAtual);
+        });
 
-        jbSair.addActionListener(e -> {
-            System.exit(0);
-        });        
+        jbSair.addActionListener(e -> dispose());
+    }
+
+    private void selecionarTipo(TipoPrimitivo tipo) {
+        tipoAtual = tipo;
+        areaDesenho.setTipo(tipoAtual);
     }
 }
