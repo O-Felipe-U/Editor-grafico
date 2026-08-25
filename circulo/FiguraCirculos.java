@@ -1,67 +1,55 @@
 package circulo;
-
 import java.awt.Color;
 import java.awt.Graphics;
 
+import ponto.Ponto;
+
 /**
- * Desenha um Circulo a partir de 2 pontos: ponto1 = centro,
- * ponto2 = define o raio (distancia entre os dois pontos).
- * Usa o algoritmo do ponto medio (midpoint) para circunferencia,
- * com simetria de 8 partes (octantes).
- * 
- * @author Julio Arakaki 
- * @version 20260823
+ * Contem metodos para desenhar figuras com circulo.
+ *
+ * @author Julio Arakaki
+ * @version 20220815
  */
 public class FiguraCirculos {
 
-    public static void desenharCirculo(Graphics g, int xc, int yc, int xr, int yr, String label, int esp, Color cor) {
-        Color corOriginal = g.getColor();
-        g.setColor(cor);
-
-        int raio = (int) Math.round(Math.hypot(xr - xc, yr - yc));
-        desenharMidpoint(g, xc, yc, raio, esp);
-
-        if (label != null && !label.isEmpty()) {
-            g.drawString(label, xc + raio, yc);
-        }
-        g.setColor(corOriginal);
+    /**
+     * Desenha um circulo na tela, a partir do centro e de um ponto na borda
+     * (2 pontos, como as demais figuras do projeto)
+     *
+     * @param g biblioteca grafica para desenhar elementos graficos
+     * @param centro ponto central do circulo
+     * @param borda ponto sobre a borda do circulo (define o raio)
+     * @param nome nome do circulo
+     * @param esp espessura do traco
+     * @param cor cor do circulo
+     */
+    public static void desenharCirculo(Graphics g, Ponto centro, Ponto borda, String nome, int esp, Color cor) {
+        CirculoGr c = new CirculoGr(centro, borda, cor, nome, esp);
+        c.desenharCirculo(g);
     }
 
     /**
-     * Implementacao do algoritmo do ponto medio (midpoint) para circulos.
+     * Desenha varios circulos na tela com cores diferentes (uso similar ao
+     * desenharPontos/desenharRetas)
+     *
+     * @param g biblioteca grafica para desenhar elementos graficos
+     * @param qtde quantidade de circulos
+     * @param esp espessura do traco
      */
-    private static void desenharMidpoint(Graphics g, int xc, int yc, int raio, int esp) {
-        int x = 0;
-        int y = raio;
-        int d = 1 - raio;
+    public static void desenharCirculos(Graphics g, int qtde, int esp) {
 
-        plotarOctantes(g, xc, yc, x, y, esp);
+        for (int i = 0; i < qtde; i++) {
+            int xc = (int) (Math.random() * 801);
+            int yc = (int) (Math.random() * 801);
+            int r = (int) (Math.random() * 100) + 10;
 
-        while (x < y) {
-            x++;
-            if (d < 0) {
-                d += 2 * x + 1;
-            } else {
-                y--;
-                d += 2 * (x - y) + 1;
-            }
-            plotarOctantes(g, xc, yc, x, y, esp);
+            // Cor (R, G e B) aleatorio
+            Color cor = new Color((int) (Math.random() * 256),
+                    (int) (Math.random() * 256),
+                    (int) (Math.random() * 256));
+
+            CirculoGr c = new CirculoGr(new Ponto(xc, yc), new Ponto(xc + r, yc), cor, "", esp);
+            c.desenharCirculo(g);
         }
-    }
-
-    private static void plotarOctantes(Graphics g, int xc, int yc, int x, int y, int esp) {
-        plotar(g, xc + x, yc + y, esp);
-        plotar(g, xc - x, yc + y, esp);
-        plotar(g, xc + x, yc - y, esp);
-        plotar(g, xc - x, yc - y, esp);
-        plotar(g, xc + y, yc + x, esp);
-        plotar(g, xc - y, yc + x, esp);
-        plotar(g, xc + y, yc - x, esp);
-        plotar(g, xc - y, yc - x, esp);
-    }
-
-    private static void plotar(Graphics g, int x, int y, int esp) {
-        int tam = Math.max(1, esp);
-        g.fillRect(x - tam / 2, y - tam / 2, tam, tam);
     }
 }

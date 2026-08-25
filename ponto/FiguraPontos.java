@@ -1,27 +1,50 @@
 package ponto;
-
 import java.awt.Color;
 import java.awt.Graphics;
 
 /**
- * Desenha um Ponto. E o unico primitivo que precisa de apenas
- * 1 clique (nao 2) para ser definido: o proprio ponto clicado.
+ * Contem metodos para desenhar figuras com ponto
  * 
- * @author Julio Arakaki 
- * @version 20260823
+ * @author Julio Arakaki
+ * @version 20220815
  */
 public class FiguraPontos {
 
-    public static void desenharPonto(Graphics g, int x, int y, String label, int esp, Color cor) {
-        Color corOriginal = g.getColor();
-        g.setColor(cor);
+	/**
+	 * Desenha um ponto na tela
+	 * @param g biblioteca grafica para desenhar elementos graficos
+	 * @param x coordena x do ponto
+	 * @param y coordenada y do ponto
+	 * @param nome nome do ponto
+	 * @param diametro diametro do ponto
+	 * @param cor cor do ponto
+	 */
+	public static void desenharPonto(Graphics g, int x, int y, String nome, int diametro, Color cor){
+		// Color cor = new Color((int) (Math.random() * 256),  
+		// (int) (Math.random() * 256),  
+		// (int) (Math.random() * 256));
+		PontoGr p = new PontoGr(x, y, cor, nome, diametro);
+		p.desenharPonto(g);
+	}
 
-        int tam = Math.max(1, esp);
-        g.fillOval(x - tam / 2, y - tam / 2, tam, tam);
+	/**
+	 * Desenha variso pontos na tela com cores diferentes
+	 * @param g biblioteca grafica para desenhar elementos graficos
+	 * @param qtde quantidade de pontos
+	 * @param diametro diametro do pontos
+	 */
+	public static void desenharPontos(Graphics g, int qtde, int diametro){
 
-        if (label != null && !label.isEmpty()) {
-            g.drawString(label, x + tam, y);
-        }
-        g.setColor(corOriginal);
-    }
+		for(int i=0; i < qtde; i++) {
+			int x = (int) (Math.random() * 801);
+			int y = (int) (Math.random() * 801);
+
+			// R, G e B aleatorio
+			Color cor = new Color((int) (Math.random() * 256),  
+					(int) (Math.random() * 256),  
+					(int) (Math.random() * 256));
+			PontoGr p = new PontoGr(x, y, cor, diametro);
+			p.desenharPonto(g);
+		}
+	}
 }

@@ -1,14 +1,14 @@
 package reta;
 import ponto.Ponto;
 /**
- * Escreva uma descrição da classe Reta aqui.
- * 
- * @author (seu nome) 
- * @version (um número da versão ou uma data)
+ * Reta matematica.
+ *
+ * @author Julio
+ * @version 12/08/2020
  */
-public class Reta
-{
-    // variáveis de instância - substitua o exemplo abaixo pelo seu próprio
+public class Reta {
+ 
+    // Atributos da reta
     public Ponto p1, p2;
 
     /**
@@ -24,17 +24,40 @@ public class Reta
         setP2(new Ponto(x2, y2));
     }
     
-        /**
+    /**
+     * Constroi uma reta com valores (double) de x1, y1 e x2, y2
+     *
+     * @param x1 coordenada x de p1
+     * @param y1 coordenada y de p1
+     * @param x2 coordenada x de p2
+     * @param y2 coordenada y de p2
+     */
+    public Reta(double x1, double y1, double x2, double y2) {
+        setP1(new Ponto(x1, y1));
+        setP2(new Ponto(x2, y2));
+    }
+    
+    /**
      * Controi uma reta com valores de p1 e p2 (externos)
      *
-     * @param p1 Um parâmetro
-     * @param p2 Um parâmetro
+     * @param p1 Um parametro
+     * @param p2 Um parametro
      */
     public Reta(Ponto p1, Ponto p2) {
         setP1(p1);
         setP2(p2);
     }
-
+    
+    /**
+     * Constroi uma reta com dados de outra (externa)
+     *
+     * @param r reta externa
+     */
+    public Reta (Reta r){
+        setP1(r.getP1());
+        setP2(r.getP2());
+    }
+    
     /**
      * Altera valor de p1 de acordo com o parametro
      *
@@ -44,7 +67,7 @@ public class Reta
         this.p1 = p;
     }
     
-        /**
+    /**
      * Altera valor de p2 de acordo com o parametro
      *
      * @param p valor de p2 (externo)
@@ -53,7 +76,7 @@ public class Reta
         this.p2 = p;
     }
     
-        /**
+    /**
      * Retorna valor de p1
      *
      * @return valor de p1
@@ -62,7 +85,7 @@ public class Reta
         return this.p1;
     }
     
-        /**
+    /**
      * Retorna p2
      *
      * @return valor de p2
@@ -70,9 +93,7 @@ public class Reta
     public Ponto getP2(){
         return this.p2;
     }
-    
-    
-        /**
+    /**
      * Calcula o valor de m (da equacao reduzida de reta: y = mx + b)
      *
      * @return valor de m
@@ -82,7 +103,6 @@ public class Reta
         double m = (getP2().getY() - getP1().getY())/(getP2().getX() - getP1().getX());
         return m;
     }
-    
      /**
       * Calcula o valor de b (y = mx + b)
       *
@@ -94,14 +114,16 @@ public class Reta
         return b;
     }
     
-        /**
+    
+    /**
      * Imprime a equacao de reta no formato (y = mx + b)
      *
      * @return string que representa a reta
      */
     public String toString(){
-        String s = "P1: " + getP1().toString() + " P2: " + getP2().toString() + "\n";
-        s = s + "\nEquação da reta: y = " + calcularM() + "*x + " + calcularB() + "\n";
+        String s = "P1: " + getP1().toString() + " P2: " + getP2().toString();
+        s = s + "\nEq. da reta: y = " + calcularM() + "*x + " + calcularB();
         return s;
     }
+   
 }

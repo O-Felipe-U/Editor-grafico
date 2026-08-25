@@ -13,7 +13,7 @@ import javax.swing.JToolBar;
  * Cria a interface com o usuario (GUI)
  * 
  * @author Julio Arakaki 
- * @version 20260823
+ * @version 20220815
  */
 class Gui extends JFrame {
     // Tipo Atual de primitivo
@@ -69,15 +69,15 @@ class Gui extends JFrame {
         barraComandos.add(jbPonto);
         barraComandos.add(jbReta);
         barraComandos.add(jbCirculo);
-        barraComandos.add(jbRetangulo);
-        barraComandos.add(jbTriangulo);
+        barraComandos.add(jbRetangulo); // Botao de Retangulo
+        barraComandos.add(jbTriangulo); // Botao de Triangulo
         barraComandos.add(jbLimpar); // Botao de Limpar
         barraComandos.add(jbCor); // Botao de Cores
 
         barraComandos.add(jlEsp); // Label para espessura
         barraComandos.add(jsEsp);    // Slider para espacamento
         areaDesenho.setEsp(espAtual); // define a espessura inicial
-        barraComandos.add(jbSair); // Botao de Sair
+        barraComandos.add(jbSair); // Botao de Cores
 
         // adiciona os componentes com os respectivos layouts
         add(barraComandos, BorderLayout.NORTH);                
@@ -97,17 +97,19 @@ class Gui extends JFrame {
         jbCirculo.addActionListener(e -> {
             tipoAtual = TipoPrimitivo.CIRCULO;
             areaDesenho.setTipo(tipoAtual);
-        });
+        });        
         jbRetangulo.addActionListener(e -> {
             tipoAtual = TipoPrimitivo.RETANGULO;
             areaDesenho.setTipo(tipoAtual);
-        });
+        });        
         jbTriangulo.addActionListener(e -> {
             tipoAtual = TipoPrimitivo.TRIANGULO;
             areaDesenho.setTipo(tipoAtual);
-        });
+        });        
         jbLimpar.addActionListener(e -> {
-            areaDesenho.limpar(); // limpa de fato a lista de figuras desenhadas
+            areaDesenho.removeAll();
+            jsEsp.setValue(1); // inicia slider (necessario para limpar ultimo primitivoda tela) 
+            repaint();        
         });        
         jbCor.addActionListener(e -> {
             Color c = JColorChooser.showDialog(null, "Escolha uma cor", msg.getForeground()); 

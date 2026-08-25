@@ -1,40 +1,55 @@
 package triangulo;
-
 import java.awt.Color;
 import java.awt.Graphics;
 
-import reta.FiguraRetas;
+import ponto.Ponto;
 
 /**
- * Desenha um Triangulo a partir de 2 pontos. Os pontos definem o
- * retangulo envolvente (bounding box); o triangulo e isosceles,
- * com um vertice no topo-meio e a base nos dois cantos inferiores
- * desse retangulo. Reaproveita o algoritmo de reta (midpoint) para
- * desenhar os 3 lados.
- * 
- * @author Julio Arakaki 
- * @version 20260823
+ * Contem metodos para desenhar figuras com triangulo.
+ *
+ * @author Julio Arakaki
+ * @version 20220815
  */
 public class FiguraTriangulos {
 
-    public static void desenharTriangulo(Graphics g, int x1, int y1, int x2, int y2, String label, int esp, Color cor) {
-        int xMin = Math.min(x1, x2);
-        int xMax = Math.max(x1, x2);
-        int yMin = Math.min(y1, y2);
-        int yMax = Math.max(y1, y2);
-        int xMeio = (xMin + xMax) / 2;
+    /**
+     * Desenha um triangulo na tela, a partir dos 2 pontos do retangulo
+     * envolvente
+     *
+     * @param g biblioteca grafica para desenhar elementos graficos
+     * @param p1 1o ponto (canto superior-esquerdo do retangulo envolvente)
+     * @param p2 2o ponto (canto inferior-direito do retangulo envolvente)
+     * @param nome nome do triangulo
+     * @param esp espessura do traco
+     * @param cor cor do triangulo
+     */
+    public static void desenharTriangulo(Graphics g, Ponto p1, Ponto p2, String nome, int esp, Color cor) {
+        TrianguloGr t = new TrianguloGr(p1, p2, cor, nome, esp);
+        t.desenharTriangulo(g);
+    }
 
-        // vertices do triangulo
-        int vx1 = xMeio, vy1 = yMin; // topo
-        int vx2 = xMin, vy2 = yMax;  // inferior esquerdo
-        int vx3 = xMax, vy3 = yMax;  // inferior direito
+    /**
+     * Desenha varios triangulos na tela com cores diferentes
+     *
+     * @param g biblioteca grafica para desenhar elementos graficos
+     * @param qtde quantidade de triangulos
+     * @param esp espessura do traco
+     */
+    public static void desenharTriangulos(Graphics g, int qtde, int esp) {
 
-        FiguraRetas.desenharReta(g, vx1, vy1, vx2, vy2, "", esp, cor);
-        FiguraRetas.desenharReta(g, vx2, vy2, vx3, vy3, "", esp, cor);
-        FiguraRetas.desenharReta(g, vx3, vy3, vx1, vy1, "", esp, cor);
+        for (int i = 0; i < qtde; i++) {
+            int x1 = (int) (Math.random() * 701);
+            int y1 = (int) (Math.random() * 701);
+            int x2 = x1 + (int) (Math.random() * 100) + 10;
+            int y2 = y1 + (int) (Math.random() * 100) + 10;
 
-        if (label != null && !label.isEmpty()) {
-            g.drawString(label, xMeio, yMin - 5);
+            // Cor (R, G e B) aleatorio
+            Color cor = new Color((int) (Math.random() * 256),
+                    (int) (Math.random() * 256),
+                    (int) (Math.random() * 256));
+
+            TrianguloGr t = new TrianguloGr(new Ponto(x1, y1), new Ponto(x2, y2), cor, "", esp);
+            t.desenharTriangulo(g);
         }
     }
 }
