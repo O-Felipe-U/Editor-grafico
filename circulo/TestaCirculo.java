@@ -1,5 +1,9 @@
+package circulo;
+
+import ponto.Ponto;
+
 /**
- * Aplicacao para testar primitivos graficos.
+ * Testa a classe Circulo.
  *
  * @author Felipe Estima Correia Urzi
  * @author Igor Dias da Silva
@@ -8,9 +12,9 @@
  *
  * @version 20220815
  */
-public class App {
+public class TestaCirculo {
     public static void main(String args[]) {
-        // Cria e define dimensao da janela (em pixels)
-        new Gui(700, 600); 
+        Circulo c = new Circulo(new Ponto(10, 10), new Ponto(20, 10));
+        System.out.println("Circulo: " + c);
     }
 }

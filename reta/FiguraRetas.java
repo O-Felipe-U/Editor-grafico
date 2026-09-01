@@ -1,80 +1,56 @@
 package reta;
-
 import java.awt.Color;
 import java.awt.Graphics;
 
 /**
- * Desenha uma Reta a partir de 2 pontos (ponto1 e ponto2), usando
- * o algoritmo do ponto medio (midpoint / Bresenham).
- * 
- * @author Julio Arakaki 
- * @version 20260823
+ * Desenha figuras com retas.
+ *
+ * @author Felipe Estima Correia Urzi
+ * @author Igor Dias da Silva
+ * @author Pedro Henrique Freire
+ * @author Thierry Nadjarian
+ *
+ * @version 20220815
  */
 public class FiguraRetas {
-
-    public static void desenharReta(Graphics g, int x1, int y1, int x2, int y2, String label, int esp, Color cor) {
-        Color corOriginal = g.getColor();
-        g.setColor(cor);
-
-        int dx = Math.abs(x2 - x1);
-        int dy = Math.abs(y2 - y1);
-        int sx = (x1 < x2) ? 1 : -1;
-        int sy = (y1 < y2) ? 1 : -1;
-
-        // "steep" = reta mais inclinada que 45 graus: percorremos o
-        // algoritmo trocando os papeis de x e y
-        boolean steep = dy > dx;
-
-        desenharMidpoint(g, x1, y1, x2, y2, sx, sy, esp, steep);
-
-        if (label != null && !label.isEmpty()) {
-            g.drawString(label, (x1 + x2) / 2, (y1 + y2) / 2);
-        }
-        g.setColor(corOriginal);
+    /**
+     * Desenha uma reta de acordo com os pontos p1 e p2
+     *
+     * @param g biblioteca para desenhar o primitivo grafico
+     * @param x1 coordenada x de p1
+     * @param y1 coordenada y de p1
+     * @param x2 coordenada x de p2
+     * @param y2 coordenada y de p2
+     * @param nome nome da reta
+     * @param esp espessura da reta
+     * @param cor cor da reta
+     */
+    public static void desenharReta(Graphics g, int x1, int y1, int x2, int y2, String nome, int esp, Color cor){
+       RetaGr r = new RetaGr(x1, y1, x2, y2, cor, nome, esp);
+        r.desenharReta(g );
     }
 
     /**
-     * Implementacao do algoritmo do ponto medio (midpoint) para retas.
+     * Desenha varias retas na area de desenho
+     *
+     * @param g biblioteca grafica para desenhar os primitivos
+     * @param qtde quantidade de retas
+     * @param esp espessura das retas
      */
-    private static void desenharMidpoint(Graphics g, int x1, int y1, int x2, int y2,
-                                          int sx, int sy, int esp, boolean steep) {
-        int px1 = steep ? y1 : x1;
-        int py1 = steep ? x1 : y1;
-        int px2 = steep ? y2 : x2;
+    public static void desenharRetas(Graphics g, int qtde, int esp){
 
-        int passoX = steep ? sy : sx;
-        int passoY = steep ? sx : sy;
+        for(int i=0; i < qtde; i++) {
+            int x1 = (int) (Math.random() * 801);
+            int y1 = (int) (Math.random() * 801);
+            int x2 = (int) (Math.random() * 801);
+            int y2 = (int) (Math.random() * 801);
 
-        int dx = Math.abs(px2 - px1);
-        int dy = Math.abs((steep ? x2 : y2) - py1);
-
-        int d = 2 * dy - dx;
-        int incrE = 2 * dy;
-        int incrNE = 2 * (dy - dx);
-
-        int x = px1;
-        int y = py1;
-
-        plotar(g, steep, x, y, esp);
-
-        while (x != px2) {
-            if (d <= 0) {
-                d += incrE;
-            } else {
-                d += incrNE;
-                y += passoY;
-            }
-            x += passoX;
-            plotar(g, steep, x, y, esp);
-        }
-    }
-
-    private static void plotar(Graphics g, boolean steep, int x, int y, int esp) {
-        int tam = Math.max(1, esp);
-        if (steep) {
-            g.fillRect(y - tam / 2, x - tam / 2, tam, tam);
-        } else {
-            g.fillRect(x - tam / 2, y - tam / 2, tam, tam);
+            // Cor (R, G e B) aleatorio
+            Color cor = new Color((int) (Math.random() * 256),  
+                    (int) (Math.random() * 256),  
+                    (int) (Math.random() * 256));
+            RetaGr r = new RetaGr(x1, y1, x2, y2, cor, "", esp);
+            r.desenharReta(g);
         }
     }
 }

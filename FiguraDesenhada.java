@@ -1,102 +1,88 @@
 import java.awt.Color;
-import java.awt.Graphics;
-
-import circulo.FiguraCirculos;
-import ponto.FiguraPontos;
-import reta.FiguraRetas;
-import retangulo.FiguraRetangulos;
-import triangulo.FiguraTriangulos;
 
 /**
- * Representa um primitivo grafico concluido.
+ * Guarda todas as informacoes necessarias para desenhar novamente um
+ * primitivo grafico (ponto, reta, circulo, retangulo ou triangulo) que ja
+ * foi desenhado na tela.
  *
- * A classe guarda o tipo, os pontos de construcao, a cor e a espessura.
- * Ela tambem sabe redesenhar o primitivo delegando ao algoritmo do pacote
- * correspondente. Isso permite que o mesmo objeto seja armazenado na ED e
- * redesenhado quantas vezes forem necessarias.
+ * Cada figura desenhada pelo usuario vira um objeto FiguraDesenhada, que e
+ * guardado em uma EDL (lista) dentro do PainelDesenho. Assim, a tela pode
+ * ser inteiramente redesenhada a qualquer momento - por exemplo, apos um
+ * "Limpar" seguido de um "Redesenhar".
+ *
+ * @author Felipe Estima Correia Urzi
+ * @author Igor Dias da Silva
+ * @author Pedro Henrique Freire
+ * @author Thierry Nadjarian
+ *
+ * @version 20220815
  */
 public class FiguraDesenhada {
-    private final TipoPrimitivo tipo;
-    private final int[] xs;
-    private final int[] ys;
-    private final Color cor;
-    private final int esp;
+
+    // tipo do primitivo (PONTO, RETA, CIRCULO, RETANGULO ou TRIANGULO)
+    private TipoPrimitivo tipo;
+
+    // Para PONTO: (x1, y1) e a posicao do ponto (x2, y2 nao sao usados).
+    // Para RETA/CIRCULO/RETANGULO/TRIANGULO: (x1, y1) e (x2, y2) sao os
+    // dois pontos usados para construir a figura (1o e 2o clique do mouse)
+    private int x1, y1, x2, y2;
+
+    private String nome;
+    private int esp;
+    private Color cor;
 
     /**
-     * Cria uma figura a partir de um ou mais pontos.
+     * Constroi o registro de uma figura ja desenhada
+     *
+     * @param tipo tipo do primitivo
+     * @param x1 coordenada x do 1o ponto
+     * @param y1 coordenada y do 1o ponto
+     * @param x2 coordenada x do 2o ponto (nao usado quando tipo == PONTO)
+     * @param y2 coordenada y do 2o ponto (nao usado quando tipo == PONTO)
+     * @param nome nome da figura
+     * @param esp espessura/diametro usado no desenho
+     * @param cor cor da figura
      */
-    public FiguraDesenhada(TipoPrimitivo tipo, int[] xs, int[] ys, Color cor, int esp) {
-        if (tipo == null || !tipo.ehPrimitivoDesenhavel()) {
-            throw new IllegalArgumentException("Tipo invalido para uma figura desenhada.");
-        }
-        if (xs == null || ys == null || xs.length != ys.length) {
-            throw new IllegalArgumentException("Coordenadas invalidas.");
-        }
-        if (xs.length != tipo.getCliquesNecessarios()) {
-            throw new IllegalArgumentException(
-                    tipo + " precisa de " + tipo.getCliquesNecessarios() + " ponto(s)."
-            );
-        }
-
+    public FiguraDesenhada(TipoPrimitivo tipo, int x1, int y1, int x2, int y2, String nome, int esp, Color cor) {
         this.tipo = tipo;
-        this.xs = xs.clone();
-        this.ys = ys.clone();
-        this.cor = cor == null ? Color.BLACK : cor;
-        this.esp = Math.max(1, esp);
+        this.x1 = x1;
+        this.y1 = y1;
+        this.x2 = x2;
+        this.y2 = y2;
+        this.nome = nome;
+        this.esp = esp;
+        this.cor = cor;
     }
 
     public TipoPrimitivo getTipo() {
         return tipo;
     }
 
-    public Color getCor() {
-        return cor;
+    public int getX1() {
+        return x1;
     }
 
-    public int getEspessura() {
+    public int getY1() {
+        return y1;
+    }
+
+    public int getX2() {
+        return x2;
+    }
+
+    public int getY2() {
+        return y2;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public int getEsp() {
         return esp;
     }
 
-    public int getQuantidadePontos() {
-        return xs.length;
-    }
-
-    public int getX(int indice) {
-        return xs[indice];
-    }
-
-    public int getY(int indice) {
-        return ys[indice];
-    }
-
-    /**
-     * Desenha esta figura usando o algoritmo implementado para o seu tipo.
-     */
-    public void desenhar(Graphics g) {
-        switch (tipo) {
-            case PONTO:
-                FiguraPontos.desenharPonto(g, xs[0], ys[0], "", esp, cor);
-                break;
-            case RETA:
-                FiguraRetas.desenharReta(g, xs[0], ys[0], xs[1], ys[1], "", esp, cor);
-                break;
-            case CIRCULO:
-                FiguraCirculos.desenharCirculo(g, xs[0], ys[0], xs[1], ys[1], "", esp, cor);
-                break;
-            case RETANGULO:
-                FiguraRetangulos.desenharRetangulo(g, xs[0], ys[0], xs[1], ys[1], "", esp, cor);
-                break;
-            case TRIANGULO:
-                FiguraTriangulos.desenharTriangulo(
-                        g,
-                        xs[0], ys[0],
-                        xs[1], ys[1],
-                        xs[2], ys[2],
-                        "", esp, cor
-                );
-                break;
-            default:
-                throw new IllegalStateException("Tipo nao desenhavel: " + tipo);
-        }
+    public Color getCor() {
+        return cor;
     }
 }

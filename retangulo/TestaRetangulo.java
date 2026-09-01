@@ -1,5 +1,7 @@
+package retangulo;
+
 /**
- * Aplicacao para testar primitivos graficos.
+ * Testa a classe Retangulo.
  *
  * @author Felipe Estima Correia Urzi
  * @author Igor Dias da Silva
@@ -8,9 +10,9 @@
  *
  * @version 20220815
  */
-public class App {
+public class TestaRetangulo {
     public static void main(String args[]) {
-        // Cria e define dimensao da janela (em pixels)
-        new Gui(700, 600); 
+        Retangulo r = new Retangulo(10, 10, 60, 40);
+        System.out.println("Retangulo: " + r);
     }
 }
