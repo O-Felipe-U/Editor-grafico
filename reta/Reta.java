@@ -3,7 +3,11 @@ import ponto.Ponto;
 /**
  * Reta matematica.
  *
- * @author Julio
+ * @author Felipe Estima Correia Urzi
+ * @author Igor Dias da Silva
+ * @author Pedro Henrique Freire
+ * @author Thierry Nadjarian
+ *
  * @version 12/08/2020
  */
 public class Reta {

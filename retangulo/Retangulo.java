@@ -7,7 +7,11 @@ import ponto.Ponto;
  * Um retangulo e definido a partir de DOIS PONTOS que representam dois
  * cantos opostos (ex.: superior-esquerdo e inferior-direito).
  *
- * @author Julio Arakaki
+ * @author Felipe Estima Correia Urzi
+ * @author Igor Dias da Silva
+ * @author Pedro Henrique Freire
+ * @author Thierry Nadjarian
+ *
  * @version 20220815
  */
 public class Retangulo {

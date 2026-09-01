@@ -9,7 +9,11 @@ import ponto.Ponto;
  * - o 2o ponto (borda) e um ponto qualquer sobre a borda (define o raio,
  *   pela distancia entre os dois pontos)
  *
- * @author Julio Arakaki
+ * @author Felipe Estima Correia Urzi
+ * @author Igor Dias da Silva
+ * @author Pedro Henrique Freire
+ * @author Thierry Nadjarian
+ *
  * @version 20220815
  */
 public class Circulo {

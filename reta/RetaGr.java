@@ -7,7 +7,11 @@ import ponto.PontoGr;
 /**
  * Implementacao da classe reta grafica.
  *
- * @author Julio Arakaki
+ * @author Felipe Estima Correia Urzi
+ * @author Igor Dias da Silva
+ * @author Pedro Henrique Freire
+ * @author Thierry Nadjarian
+ *
  * @version 1.0 - 24/08/2020
  */
 public class RetaGr extends Reta{

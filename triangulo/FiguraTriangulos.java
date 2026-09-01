@@ -7,7 +7,11 @@ import ponto.Ponto;
 /**
  * Contem metodos para desenhar figuras com triangulo.
  *
- * @author Julio Arakaki
+ * @author Felipe Estima Correia Urzi
+ * @author Igor Dias da Silva
+ * @author Pedro Henrique Freire
+ * @author Thierry Nadjarian
+ *
  * @version 20220815
  */
 public class FiguraTriangulos {

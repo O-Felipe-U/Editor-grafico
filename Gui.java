@@ -11,8 +11,12 @@ import javax.swing.JToolBar;
 @SuppressWarnings("serial")
 /**
  * Cria a interface com o usuario (GUI)
- * 
- * @author Julio Arakaki 
+ *
+ * @author Felipe Estima Correia Urzi
+ * @author Igor Dias da Silva
+ * @author Pedro Henrique Freire
+ * @author Thierry Nadjarian
+ *
  * @version 20220815
  */
 class Gui extends JFrame {
@@ -42,6 +46,7 @@ class Gui extends JFrame {
     private JButton jbRetangulo = new JButton("Retangulo");
     private JButton jbTriangulo = new JButton("Triangulo");
     private JButton jbLimpar = new JButton("Limpar");
+    private JButton jbRedesenhar = new JButton("Redesenhar");
     private JButton jbCor = new JButton("Cor");
     private JButton jbSair = new JButton("Sair");
 
@@ -72,7 +77,8 @@ class Gui extends JFrame {
         barraComandos.add(jbRetangulo); // Botao de Retangulo
         barraComandos.add(jbTriangulo); // Botao de Triangulo
         barraComandos.add(jbLimpar); // Botao de Limpar
-        barraComandos.add(jbCor); // Botao de Cores
+        barraComandos.add(jbRedesenhar); // Botao de Redesenhar (traz de volta o ultimo desenho limpo)
+        //barraComandos.add(jbCor); // Botao de Cores
 
         barraComandos.add(jlEsp); // Label para espessura
         barraComandos.add(jsEsp);    // Slider para espacamento
@@ -107,9 +113,14 @@ class Gui extends JFrame {
             areaDesenho.setTipo(tipoAtual);
         });        
         jbLimpar.addActionListener(e -> {
-            areaDesenho.removeAll();
+            // guarda os desenhos atuais (em uma EDL) e limpa a tela;
+            // o botao "Redesenhar" recupera esses desenhos depois
+            areaDesenho.limparTela();
             jsEsp.setValue(1); // inicia slider (necessario para limpar ultimo primitivoda tela) 
-            repaint();        
+        });        
+        jbRedesenhar.addActionListener(e -> {
+            // traz de volta os desenhos guardados no ultimo "Limpar"
+            areaDesenho.redesenhar();
         });        
         jbCor.addActionListener(e -> {
             Color c = JColorChooser.showDialog(null, "Escolha uma cor", msg.getForeground()); 

@@ -16,8 +16,12 @@ import triangulo.FiguraTriangulos;
 
 /**
  * Cria desenhos de acordo com o tipo e eventos do mouse
- * 
- * @author Julio Arakaki 
+ *
+ * @author Felipe Estima Correia Urzi
+ * @author Igor Dias da Silva
+ * @author Pedro Henrique Freire
+ * @author Thierry Nadjarian
+ *
  * @version 20220815
  */
 public class PainelDesenho extends JPanel implements MouseListener, MouseMotionListener {
@@ -25,7 +29,8 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     JLabel msg;           // Label para mensagens
     TipoPrimitivo tipo; // Tipo do primitivo
     Color corAtual;       // Cor atual do primitivo
-    int esp;              // Diametro do ponto
+    int esp;         // Diametro do ponto
+          
 
     // Para ponto
     int x, y;
@@ -35,6 +40,17 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
 
     // selecionar primeiro click do mouse
     boolean primeiraVez = true;
+
+    // Lista (EDL) com todas as figuras atualmente desenhadas na tela.
+    // Cada primitivo concluido (ponto, ou 2o clique de reta/circulo/
+    // retangulo/triangulo) vira um FiguraDesenhada guardado aqui, e o
+    // paintComponent percorre essa lista para redesenhar tudo.
+    private EDL<FiguraDesenhada> desenhosAtuais = new EDL<>();
+
+    // Lista (EDL) que guarda o "retrato" dos desenhos no momento em que o
+    // botao "Limpar" foi clicado, para que o botao "Redesenhar" possa
+    // trazer essas figuras de volta para a tela.
+    private EDL<FiguraDesenhada> desenhosSalvos = new EDL<>();
 
 
     /**
@@ -130,12 +146,19 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     }
 
     /**
-     * Metodo chamado quando o paint eh acionado
+     * Metodo chamado quando o paint eh acionado.
+     *
+     * Limpa o fundo do painel (super.paintComponent) e redesenha TODAS as
+     * figuras guardadas em desenhosAtuais - e assim que o "Redesenhar"
+     * consegue trazer varias figuras de volta de uma so vez.
      *
      * @param g biblioteca para desenhar em modo grafico
      */
-    public void paintComponent(Graphics g) {   
-        desenharPrimitivos(g);
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g); // limpa o fundo do painel antes de redesenhar
+        for (int i = 0; i < desenhosAtuais.tamanho(); i++) {
+            desenharFigura(g, desenhosAtuais.obter(i));
+        }
     }
 
     
@@ -145,11 +168,14 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
      * @param e dados do evento
      */
     public void mousePressed(MouseEvent e) { 
-        Graphics g = getGraphics();  
         if (tipo == TipoPrimitivo.PONTO){
+
             x = e.getX();
             y = e.getY();
-            paint(g);
+
+            // guarda a figura concluida na lista e manda redesenhar tudo
+            desenhosAtuais.inserir(new FiguraDesenhada(TipoPrimitivo.PONTO, x, y, 0, 0, "", getEsp(), getCorAtual()));
+            repaint();
         } else if (tipo == TipoPrimitivo.RETA
                 || tipo == TipoPrimitivo.CIRCULO
                 || tipo == TipoPrimitivo.RETANGULO
@@ -164,12 +190,19 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
                 x2 = (int)e.getX();
                 y2 = (int)e.getY();
                 primeiraVez = true;
-                paint(g);
+
             }
         }
     }     
 
-    public void mouseReleased(MouseEvent e) { 
+    public void mouseReleased(MouseEvent e) {
+        System.out.println("RELEASED\n\n");
+        
+        
+        // guarda a figura concluida na lista e manda redesenhar tudo
+        desenhosAtuais.inserir(new FiguraDesenhada(tipo, x1, y1, x2, y2, "", getEsp(), getCorAtual()));
+        repaint();
+
     }           
 
     public void mouseClicked(MouseEvent e) {
@@ -182,6 +215,16 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     }
 
     public void mouseDragged(MouseEvent e) {
+        //tenho que guardar a posição anterior para desenhar e apagar.
+        
+        System.out.println("DRAGGED\n");        
+        
+        x2 = (int)e.getX();
+        y2 = (int)e.getY();
+        desenhosAtuais.inserir(new FiguraDesenhada(tipo, x1, y1, x2, y2, "", getEsp(), getCorAtual()));
+        repaint();
+        
+        
     }
 
     /**
@@ -194,34 +237,62 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     }
 
     /**
-     * Desenha os primitivos
+     * Desenha uma unica figura (registro FiguraDesenhada) chamando a
+     * classe "Figura*" correta de acordo com o tipo do primitivo.
      *
      * @param g biblioteca para desenhar em modo grafico
+     * @param f figura (com todos os dados) a ser desenhada
      */
-    public void desenharPrimitivos(Graphics g){
-        if (tipo == TipoPrimitivo.PONTO){
-            FiguraPontos.desenharPonto(g, x, y, "", getEsp(), getCorAtual());
-            //FiguraPontos.desenharPontos(g, 50, 20);
-        }
+    private void desenharFigura(Graphics g, FiguraDesenhada f){
+        switch (f.getTipo()) {
+            case PONTO:
+                FiguraPontos.desenharPonto(g, f.getX1(), f.getY1(), f.getNome(), f.getEsp(), f.getCor());
+                break;
 
-        if (tipo == TipoPrimitivo.RETA){
-            FiguraRetas.desenharReta(g, x1, y1, x2, y2, "", getEsp(), getCorAtual());
-            //FiguraRetas.desenharRetas(g, 10, 3);
-        }
+            case RETA:
+                FiguraRetas.desenharReta(g, f.getX1(), f.getY1(), f.getX2(), f.getY2(), f.getNome(), f.getEsp(), f.getCor());
+                break;
 
-        if (tipo==TipoPrimitivo.CIRCULO){
-            // 1o clique (x1,y1) = centro; 2o clique (x2,y2) = ponto na borda (define o raio)
-            FiguraCirculos.desenharCirculo(g, new Ponto(x1, y1), new Ponto(x2, y2), "", getEsp(), getCorAtual());
-        }
+            case CIRCULO:
+                // 1o clique = centro; 2o clique = ponto na borda (define o raio)
+                FiguraCirculos.desenharCirculo(g, new Ponto(f.getX1(), f.getY1()), new Ponto(f.getX2(), f.getY2()), f.getNome(), f.getEsp(), f.getCor());
+                break;
 
-        if (tipo==TipoPrimitivo.RETANGULO){
-            // (x1,y1) e (x2,y2) sao dois cantos opostos do retangulo
-            FiguraRetangulos.desenharRetangulo(g, new Ponto(x1, y1), new Ponto(x2, y2), "", getEsp(), getCorAtual());
-        }
+            case RETANGULO:
+                // (x1,y1) e (x2,y2) sao dois cantos opostos do retangulo
+                FiguraRetangulos.desenharRetangulo(g, new Ponto(f.getX1(), f.getY1()), new Ponto(f.getX2(), f.getY2()), f.getNome(), f.getEsp(), f.getCor());
+                break;
 
-        if (tipo==TipoPrimitivo.TRIANGULO){
-            // (x1,y1) e (x2,y2) definem o retangulo envolvente do triangulo
-            FiguraTriangulos.desenharTriangulo(g, new Ponto(x1, y1), new Ponto(x2, y2), "", getEsp(), getCorAtual());
+            case TRIANGULO:
+                // (x1,y1) e (x2,y2) definem o retangulo envolvente do triangulo
+                FiguraTriangulos.desenharTriangulo(g, new Ponto(f.getX1(), f.getY1()), new Ponto(f.getX2(), f.getY2()), f.getNome(), f.getEsp(), f.getCor());
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    /**
+     * Chamado pelo botao "Limpar": guarda uma copia dos desenhos atuais na
+     * EDL desenhosSalvos (para permitir "Redesenhar" depois) e em seguida
+     * esvazia a tela.
+     */
+    public void limparTela(){
+        desenhosSalvos = desenhosAtuais.copiar(); // guarda o "retrato" atual
+        desenhosAtuais.limpar();                  // esvazia o que esta na tela
+        primeiraVez = true;                       // cancela qualquer figura pela metade
+        repaint();
+    }
+
+    /**
+     * Chamado pelo botao "Redesenhar": recupera as figuras guardadas em
+     * desenhosSalvos (no ultimo "Limpar") e as traz de volta para a tela.
+     */
+    public void redesenhar(){
+        if (!desenhosSalvos.estaVazia()){
+            desenhosAtuais = desenhosSalvos.copiar();
+            repaint();
         }
     }
 }

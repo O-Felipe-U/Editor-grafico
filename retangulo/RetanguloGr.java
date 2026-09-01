@@ -14,7 +14,11 @@ import reta.RetaGr;
  * pacote "reta" - assim os 4 lados sao desenhados exatamente da mesma
  * forma que qualquer outra reta do projeto.
  *
- * @author Julio Arakaki
+ * @author Felipe Estima Correia Urzi
+ * @author Igor Dias da Silva
+ * @author Pedro Henrique Freire
+ * @author Thierry Nadjarian
+ *
  * @version 20220815
  */
 public class RetanguloGr extends Retangulo {

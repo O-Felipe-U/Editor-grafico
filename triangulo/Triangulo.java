@@ -14,7 +14,11 @@ import ponto.Ponto;
  *     vb = base inferior direita   = (x2, y2)
  *     vc = apice (topo, centralizado) = ((x1+x2)/2, y1)
  *
- * @author Julio Arakaki
+ * @author Felipe Estima Correia Urzi
+ * @author Igor Dias da Silva
+ * @author Pedro Henrique Freire
+ * @author Thierry Nadjarian
+ *
  * @version 20220815
  */
 public class Triangulo {
