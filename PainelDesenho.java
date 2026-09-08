@@ -31,17 +31,16 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     Color corAtual;       // Cor atual do primitivo
     int esp;              // Diametro do ponto
 
+
+
     // Para ponto
     int x, y;
 
-    // Para reta / circulo / retangulo / triangulo (todos usam 2 pontos: 1o e 2o clique)
+    // Para reta / circulo / retangulo / triangulo (todos usam 2 pontos: clique inicial e posicao atual do arrasto)
     int x1, y1, x2, y2;
 
-    // selecionar primeiro click do mouse
-    boolean primeiraVez = true;
-
-    // Lista (EDL) com todas as figuras atualmente desenhadas na tela.
-    // Cada primitivo concluido (ponto, ou 2o clique de reta/circulo/
+    // Lista (EDL) com todas as figuras JA CONCLUIDAS e atualmente desenhadas na tela.
+    // Cada primitivo concluido (ponto, ou o "soltar" do mouse de reta/circulo/
     // retangulo/triangulo) vira um FiguraDesenhada guardado aqui, e o
     // paintComponent percorre essa lista para redesenhar tudo.
     private EDL<FiguraDesenhada> desenhosAtuais = new EDL<>();
@@ -50,6 +49,12 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     // botao "Limpar" foi clicado, para que o botao "Redesenhar" possa
     // trazer essas figuras de volta para a tela.
     private EDL<FiguraDesenhada> desenhosSalvos = new EDL<>();
+
+    // Figura "em andamento": a previa que aparece enquanto o mouse esta
+    // sendo arrastado (do 1o clique ate o momento atual do arrasto).
+    // Fica FORA da lista desenhosAtuais - so entra na lista quando o
+    // mouse e solto. Enquanto for null, nao ha arrasto em curso.
+    private FiguraDesenhada figuraEmAndamento = null;
 
 
     /**
@@ -147,9 +152,11 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     /**
      * Metodo chamado quando o paint eh acionado.
      *
-     * Limpa o fundo do painel (super.paintComponent) e redesenha TODAS as
-     * figuras guardadas em desenhosAtuais - e assim que o "Redesenhar"
-     * consegue trazer varias figuras de volta de uma so vez.
+     * Limpa o fundo do painel (super.paintComponent), redesenha TODAS as
+     * figuras ja concluidas guardadas em desenhosAtuais, e por cima delas
+     * desenha a figuraEmAndamento (a previa do arrasto atual, se houver).
+     * Como isso acontece a cada repaint(), a previa "acompanha" o mouse
+     * sem deixar rastro e sem apagar o que ja estava desenhado.
      *
      * @param g biblioteca para desenhar em modo grafico
      */
@@ -158,11 +165,21 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
         for (int i = 0; i < desenhosAtuais.tamanho(); i++) {
             desenharFigura(g, desenhosAtuais.obter(i));
         }
+
+        // desenha por cima a figura que ainda esta sendo arrastada (previa)
+        if (figuraEmAndamento != null) {
+            desenharFigura(g, figuraEmAndamento);
+        }
     }
 
     
     /**
-     * Evento: pressionar do mouse
+     * Evento: pressionar do mouse.
+     *
+     * PONTO e concluido de imediato (nao precisa de arrasto).
+     * Para as demais formas, este e o "1o clique": guarda (x1,y1) e
+     * comeca a previa (figuraEmAndamento) com x2=y2=x1,y1 - ela sera
+     * atualizada a cada mouseDragged.
      *
      * @param e dados do evento
      */
@@ -178,25 +195,40 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
                 || tipo == TipoPrimitivo.CIRCULO
                 || tipo == TipoPrimitivo.RETANGULO
                 || tipo == TipoPrimitivo.TRIANGULO){
-            // Reta, Circulo, Retangulo e Triangulo sao todos construidos
-            // a partir de 2 pontos (1o e 2o clique do mouse)
-            if (primeiraVez == true) {
-                x1 = (int)e.getX();
-                y1 = (int)e.getY();
-                primeiraVez = false;
-            } else {
-                x2 = (int)e.getX();
-                y2 = (int)e.getY();
-                primeiraVez = true;
+            // Reta, Circulo, Retangulo e Triangulo sao construidos por
+            // arrasto: o clique inicial define (x1,y1)
+            x1 = e.getX();
+            y1 = e.getY();
+            x2 = x1;
+            y2 = y1;
 
-                // guarda a figura concluida na lista e manda redesenhar tudo
-                desenhosAtuais.inserir(new FiguraDesenhada(tipo, x1, y1, x2, y2, "", getEsp(), getCorAtual()));
-                repaint();
-            }
+            // cria a previa (ainda nao entra em desenhosAtuais)
+            figuraEmAndamento = new FiguraDesenhada(tipo, x1, y1, x2, y2, "", getEsp(), getCorAtual());
+            repaint();
         }
     }     
 
+    /**
+     * Evento: soltar o mouse.
+     *
+     * Finaliza a figura em andamento (usando a posicao final do mouse) e
+     * SO ENTAO ela entra em desenhosAtuais, permanentemente, junto com
+     * tudo que ja tinha sido desenhado antes.
+     *
+     * @param e dados do evento
+     */
     public void mouseReleased(MouseEvent e) { 
+        if (figuraEmAndamento != null) {
+            x2 = e.getX();
+            y2 = e.getY();
+
+            // agora sim: a figura concluida entra na lista definitiva
+            desenhosAtuais.inserir(new FiguraDesenhada(tipo, x1, y1, x2, y2, "", getEsp(), getCorAtual()));
+
+            // limpa a previa - o arrasto acabou
+            figuraEmAndamento = null;
+            repaint();
+        }
     }           
 
     public void mouseClicked(MouseEvent e) {
@@ -208,7 +240,22 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     public void mouseExited(MouseEvent e) {
     }
 
+    /**
+     * Evento: arrastar o mouse (botao pressionado + movimento).
+     *
+     * Apenas ATUALIZA a previa (figuraEmAndamento) com a posicao atual do
+     * mouse e manda repintar. Como a previa nao esta em desenhosAtuais,
+     * nada e "empilhado" na lista - so o desenho final, em mouseReleased.
+     *
+     * @param e dados do evento
+     */
     public void mouseDragged(MouseEvent e) {
+        if (figuraEmAndamento != null) {
+            x2 = e.getX();
+            y2 = e.getY();
+            figuraEmAndamento = new FiguraDesenhada(tipo, x1, y1, x2, y2, "", getEsp(), getCorAtual());
+            repaint();
+        }
     }
 
     /**
@@ -238,7 +285,7 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
                 break;
 
             case CIRCULO:
-                // 1o clique = centro; 2o clique = ponto na borda (define o raio)
+                // 1o clique = centro; posicao do arrasto/2o clique = ponto na borda (define o raio)
                 FiguraCirculos.desenharCirculo(g, new Ponto(f.getX1(), f.getY1()), new Ponto(f.getX2(), f.getY2()), f.getNome(), f.getEsp(), f.getCor());
                 break;
 
@@ -265,7 +312,7 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     public void limparTela(){
         desenhosSalvos = desenhosAtuais.copiar(); // guarda o "retrato" atual
         desenhosAtuais.limpar();                  // esvazia o que esta na tela
-        primeiraVez = true;                       // cancela qualquer figura pela metade
+        figuraEmAndamento = null;                 // cancela qualquer arrasto pela metade
         repaint();
     }
 
