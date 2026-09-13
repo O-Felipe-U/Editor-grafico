@@ -3,9 +3,12 @@ import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.io.IOException;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+
+import org.json.JSONException;
 
 import ponto.FiguraPontos;
 import ponto.Ponto;
@@ -67,7 +70,7 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
         setEsp(esp);
 
         // Adiciona "ouvidor" de eventos de mouse
-        this.addMouseListener(this); 
+        this.addMouseListener(this);
         this.addMouseMotionListener(this);
 
     }
@@ -160,13 +163,13 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
         }
     }
 
-    
+
     /**
      * Evento: pressionar do mouse
      *
      * @param e dados do evento
      */
-    public void mousePressed(MouseEvent e) { 
+    public void mousePressed(MouseEvent e) {
         if (tipo == TipoPrimitivo.PONTO){
             x = e.getX();
             y = e.getY();
@@ -194,10 +197,10 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
                 repaint();
             }
         }
-    }     
+    }
 
-    public void mouseReleased(MouseEvent e) { 
-    }           
+    public void mouseReleased(MouseEvent e) {
+    }
 
     public void mouseClicked(MouseEvent e) {
     }
@@ -277,6 +280,54 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
         if (!desenhosSalvos.estaVazia()){
             desenhosAtuais = desenhosSalvos.copiar();
             repaint();
+        }
+    }
+
+    /**
+     * Salva a lista de figuras atualmente desenhadas na tela
+     * (desenhosAtuais) em um arquivo JSON no caminho indicado, usando a
+     * classe PersistenciaJSON.
+     *
+     * Em caso de erro ao gravar o arquivo, a mensagem de erro e mostrada
+     * na label de mensagens (msg) e o metodo retorna false.
+     *
+     * @param caminho caminho do arquivo onde as figuras serao gravadas
+     * @return true se a gravacao foi bem sucedida, false caso contrario
+     */
+    public boolean salvarEmArquivo(String caminho) {
+        try {
+            PersistenciaJSON.salvar(desenhosAtuais, caminho);
+            return true;
+        } catch (IOException e) {
+            msg.setText("Erro ao salvar arquivo: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Carrega uma lista de figuras a partir de um arquivo JSON (gravado
+     * por salvarEmArquivo) no caminho indicado, substituindo as figuras
+     * atualmente desenhadas na tela (desenhosAtuais) pelas figuras lidas
+     * do arquivo e redesenhando a tela.
+     *
+     * Em caso de erro ao ler ou interpretar o arquivo, a mensagem de erro
+     * e mostrada na label de mensagens (msg) e o metodo retorna false,
+     * sem alterar os desenhos atualmente na tela.
+     *
+     * @param caminho caminho do arquivo de onde as figuras serao lidas
+     * @return true se o carregamento foi bem sucedido, false caso
+     *         contrario
+     */
+    public boolean carregarDeArquivo(String caminho) {
+        try {
+            EDL<FiguraDesenhada> lidas = PersistenciaJSON.carregar(caminho);
+            desenhosAtuais = lidas;
+            primeiraVez = true; // cancela qualquer figura pela metade
+            repaint();
+            return true;
+        } catch (IOException | JSONException e) {
+            msg.setText("Erro ao carregar arquivo: " + e.getMessage());
+            return false;
         }
     }
 }

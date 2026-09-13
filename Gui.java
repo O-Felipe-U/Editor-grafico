@@ -1,12 +1,16 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JSlider;
 import javax.swing.JToolBar;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 @SuppressWarnings("serial")
 /**
@@ -50,9 +54,27 @@ class Gui extends JFrame {
     private JButton jbCor = new JButton("Cor");
     private JButton jbSair = new JButton("Sair");
 
+    // Botoes para persistencia em arquivo JSON (salvar/abrir os desenhos)
+    private JButton jbSalvar = new JButton("Salvar");
+    private JButton jbAbrir = new JButton("Abrir");
+
     // Entrada (slider) para definir espessura dos primitivos
     private JLabel jlEsp = new JLabel("   Espessura: " + String.format("%-5s", 1));
     private JSlider jsEsp = new JSlider(1, 50, 1);
+
+    /**
+     * Verifica se o arquivo indicado tem extensao ".json" (a comparacao
+     * ignora maiusculas/minusculas). Usado pelo botao "Abrir" para evitar
+     * a tentativa de carregar um arquivo que nao seja um JSON valido.
+     *
+     * @param arquivo arquivo a ser validado
+     * @return true se o nome do arquivo termina com ".json", false caso
+     *         contrario
+     */
+    private boolean validaArquivoJson(File arquivo) {
+        String nome = arquivo.getName().toLowerCase();
+        return nome.endsWith(".json");
+    }
 
     /**
      * Constroi a GUI
@@ -80,63 +102,102 @@ class Gui extends JFrame {
         barraComandos.add(jbRedesenhar); // Botao de Redesenhar (traz de volta o ultimo desenho limpo)
         //barraComandos.add(jbCor); // Botao de Cores
 
+        barraComandos.add(jbSalvar); // Botao de Salvar (persistencia em JSON)
+        barraComandos.add(jbAbrir); // Botao de Abrir (carrega desenhos de um arquivo JSON)
+
         barraComandos.add(jlEsp); // Label para espessura
         barraComandos.add(jsEsp);    // Slider para espacamento
         areaDesenho.setEsp(espAtual); // define a espessura inicial
         barraComandos.add(jbSair); // Botao de Cores
 
         // adiciona os componentes com os respectivos layouts
-        add(barraComandos, BorderLayout.NORTH);                
-        add(areaDesenho, BorderLayout.CENTER);                
+        add(barraComandos, BorderLayout.NORTH);
+        add(areaDesenho, BorderLayout.CENTER);
         add(msg, BorderLayout.SOUTH);
 
-        // Adiciona "tratador" ("ouvidor") de eventos para 
+        // Adiciona "tratador" ("ouvidor") de eventos para
         // cada componente
         jbPonto.addActionListener(e -> {
             tipoAtual = TipoPrimitivo.PONTO;
             areaDesenho.setTipo(tipoAtual);
-        });        
+        });
         jbReta.addActionListener(e -> {
             tipoAtual = TipoPrimitivo.RETA;
             areaDesenho.setTipo(tipoAtual);
-        });        
+        });
         jbCirculo.addActionListener(e -> {
             tipoAtual = TipoPrimitivo.CIRCULO;
             areaDesenho.setTipo(tipoAtual);
-        });        
+        });
         jbRetangulo.addActionListener(e -> {
             tipoAtual = TipoPrimitivo.RETANGULO;
             areaDesenho.setTipo(tipoAtual);
-        });        
+        });
         jbTriangulo.addActionListener(e -> {
             tipoAtual = TipoPrimitivo.TRIANGULO;
             areaDesenho.setTipo(tipoAtual);
-        });        
+        });
         jbLimpar.addActionListener(e -> {
             // guarda os desenhos atuais (em uma EDL) e limpa a tela;
             // o botao "Redesenhar" recupera esses desenhos depois
             areaDesenho.limparTela();
-            jsEsp.setValue(1); // inicia slider (necessario para limpar ultimo primitivoda tela) 
-        });        
+            jsEsp.setValue(1); // inicia slider (necessario para limpar ultimo primitivoda tela)
+        });
         jbRedesenhar.addActionListener(e -> {
             // traz de volta os desenhos guardados no ultimo "Limpar"
             areaDesenho.redesenhar();
-        });        
+        });
         jbCor.addActionListener(e -> {
-            Color c = JColorChooser.showDialog(null, "Escolha uma cor", msg.getForeground()); 
-            if (c != null){ 
-                corAtual = c; // pega do chooserColor 
+            Color c = JColorChooser.showDialog(null, "Escolha uma cor", msg.getForeground());
+            if (c != null){
+                corAtual = c; // pega do chooserColor
             }
             areaDesenho.setCorAtual(corAtual); // cor atual
-        });  
+        });
         jsEsp.addChangeListener(e -> {
             espAtual = jsEsp.getValue();
             jlEsp.setText("   Espessura: " + String.format("%-5s", espAtual));
-            areaDesenho.setEsp(espAtual);        
-        });        
+            areaDesenho.setEsp(espAtual);
+        });
+
+        // Botao "Salvar": abre um seletor de arquivo e grava os desenhos
+        // atuais em um arquivo JSON no caminho escolhido pelo usuario
+        jbSalvar.addActionListener(e -> {
+            JFileChooser seletor = new JFileChooser();
+            seletor.setFileFilter(new FileNameExtensionFilter("Arquivos JSON (*.json)", "json"));
+            seletor.setSelectedFile(new File("desenho.json"));
+            int opcao = seletor.showSaveDialog(this);
+            if (opcao == JFileChooser.APPROVE_OPTION) {
+                String caminho = seletor.getSelectedFile().getAbsolutePath();
+                areaDesenho.salvarEmArquivo(caminho);
+            }
+        });
+
+        // Botao "Abrir": abre um seletor de arquivo e carrega os desenhos
+        // guardados no arquivo JSON escolhido pelo usuario, substituindo
+        // o que estiver atualmente na tela. Antes de tentar carregar, e
+        // validado se o arquivo escolhido tem extensao ".json" - caso
+        // contrario, uma mensagem avisa o usuario e o carregamento nao
+        // e realizado.
+        jbAbrir.addActionListener(e -> {
+            JFileChooser seletor = new JFileChooser();
+            seletor.setFileFilter(new FileNameExtensionFilter("Arquivos JSON (*.json)", "json"));
+            int opcao = seletor.showOpenDialog(this);
+            if (opcao == JFileChooser.APPROVE_OPTION) {
+                File arquivo = seletor.getSelectedFile();
+                if (validaArquivoJson(arquivo)) {
+                    areaDesenho.carregarDeArquivo(arquivo.getAbsolutePath());
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "O arquivo selecionado nao e um arquivo JSON (.json).\nEscolha um arquivo com essa extensao.",
+                            "Arquivo invalido",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
 
         jbSair.addActionListener(e -> {
             System.exit(0);
-        });        
+        });
     }
 }
