@@ -3,10 +3,13 @@ import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.io.IOException;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.json.JSONException;
 import ponto.FiguraPontos;
 import ponto.Ponto;
 import reta.FiguraRetas;
@@ -15,14 +18,19 @@ import retangulo.FiguraRetangulos;
 import triangulo.FiguraTriangulos;
 
 /**
- * Cria desenhos de acordo com o tipo e eventos do mouse
+ * Cria desenhos de acordo com o tipo e eventos do mouse.
+ *
+ * Todos os primitivos sao construidos a partir dos pontos clicados
+ * na tela: o PONTO precisa de 1 clique; os demais (Reta, Circulo,
+ * Retangulo, Triangulo) precisam de 2 cliques (ponto1 e ponto2).
+ * Cada figura concluida e guardada na lista "figuras", o que permite
+ * que varias figuras fiquem acumuladas corretamente na tela.
  *
  * @author Felipe Estima Correia Urzi
  * @author Igor Dias da Silva
  * @author Pedro Henrique Freire
  * @author Thierry Nadjarian
- *
- * @version 20220815
+ * @version 20260823
  */
 public class PainelDesenho extends JPanel implements MouseListener, MouseMotionListener {
 
@@ -31,13 +39,14 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     Color corAtual;       // Cor atual do primitivo
     int esp;              // Diametro do ponto
 
-
-
     // Para ponto
     int x, y;
 
-    // Para reta / circulo / retangulo / triangulo (todos usam 2 pontos: clique inicial e posicao atual do arrasto)
+    // Para reta / circulo / retangulo / triangulo (todos usam 2 pontos: 1o e 2o clique)
     int x1, y1, x2, y2;
+
+    // selecionar primeiro click do mouse
+    boolean primeiraVez = true;
 
     // Lista (EDL) com todas as figuras JA CONCLUIDAS e atualmente desenhadas na tela.
     // Cada primitivo concluido (ponto, ou o "soltar" do mouse de reta/circulo/
@@ -65,16 +74,15 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
      * @param corAtual cor atual do primitivo
      * @param esp espessura atual do primitivo
      */
-    public PainelDesenho(JLabel msg, TipoPrimitivo tipo, Color corAtual, int esp){
+    public PainelDesenho(JLabel msg, TipoPrimitivo tipo, Color corAtual, int esp) {
         setTipo(tipo);
         setMsg(msg);
         setCorAtual(corAtual);
         setEsp(esp);
 
         // Adiciona "ouvidor" de eventos de mouse
-        this.addMouseListener(this); 
+        this.addMouseListener(this);
         this.addMouseMotionListener(this);
-
     }
 
     /**
@@ -160,8 +168,12 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
      *
      * @param g biblioteca para desenhar em modo grafico
      */
+    @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g); // limpa o fundo do painel antes de redesenhar
+        for (int i = 0; i < desenhosAtuais.tamanho(); i++) {
+            desenharFigura(g, desenhosAtuais.obter(i));
+        }
         for (int i = 0; i < desenhosAtuais.tamanho(); i++) {
             desenharFigura(g, desenhosAtuais.obter(i));
         }
@@ -172,7 +184,6 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
         }
     }
 
-    
     /**
      * Evento: pressionar do mouse.
      *
@@ -183,7 +194,7 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
      *
      * @param e dados do evento
      */
-    public void mousePressed(MouseEvent e) { 
+    public void mousePressed(MouseEvent e) {
         if (tipo == TipoPrimitivo.PONTO){
             x = e.getX();
             y = e.getY();
@@ -206,7 +217,7 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
             figuraEmAndamento = new FiguraDesenhada(tipo, x1, y1, x2, y2, "", getEsp(), getCorAtual());
             repaint();
         }
-    }     
+    }
 
     /**
      * Evento: soltar o mouse.
@@ -217,7 +228,7 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
      *
      * @param e dados do evento
      */
-    public void mouseReleased(MouseEvent e) { 
+    public void mouseReleased(MouseEvent e) {
         if (figuraEmAndamento != null) {
             x2 = e.getX();
             y2 = e.getY();
@@ -229,14 +240,14 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
             figuraEmAndamento = null;
             repaint();
         }
-    }           
-
+    }
+    @Override
     public void mouseClicked(MouseEvent e) {
     }
-
+    @Override
     public void mouseEntered(MouseEvent e) {
     }
-
+    @Override
     public void mouseExited(MouseEvent e) {
     }
 
@@ -259,7 +270,8 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     }
 
     /**
-     * Evento mouseMoved: escreve mensagem no rodape (x, y) do mouse
+     * Evento mouseMoved: escreve mensagem no rodape (x, y) do mouse,
+     * indicando tambem se ha um 1o clique pendente aguardando o 2o.
      *
      * @param e dados do evento do mouse
      */
@@ -274,7 +286,7 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
      * @param g biblioteca para desenhar em modo grafico
      * @param f figura (com todos os dados) a ser desenhada
      */
-    private void desenharFigura(Graphics g, FiguraDesenhada f){
+    void desenharFigura(Graphics g, FiguraDesenhada f){
         switch (f.getTipo()) {
             case PONTO:
                 FiguraPontos.desenharPonto(g, f.getX1(), f.getY1(), f.getNome(), f.getEsp(), f.getCor());
@@ -309,7 +321,7 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
      * EDL desenhosSalvos (para permitir "Redesenhar" depois) e em seguida
      * esvazia a tela.
      */
-    public void limparTela(){
+    void limparTela(){
         desenhosSalvos = desenhosAtuais.copiar(); // guarda o "retrato" atual
         desenhosAtuais.limpar();                  // esvazia o que esta na tela
         figuraEmAndamento = null;                 // cancela qualquer arrasto pela metade
@@ -320,10 +332,57 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
      * Chamado pelo botao "Redesenhar": recupera as figuras guardadas em
      * desenhosSalvos (no ultimo "Limpar") e as traz de volta para a tela.
      */
-    public void redesenhar(){
+    void redesenhar(){
         if (!desenhosSalvos.estaVazia()){
             desenhosAtuais = desenhosSalvos.copiar();
             repaint();
+        }
+    }
+
+    /**
+     * Salva a lista de figuras atualmente desenhadas na tela
+     * (desenhosAtuais) em um arquivo JSON no caminho indicado, usando a
+     * classe PersistenciaJSON.
+     *
+     * Em caso de erro ao gravar o arquivo, a mensagem de erro e mostrada
+     * na label de mensagens (msg) e o metodo retorna false.
+     *
+     * @param caminho caminho do arquivo onde as figuras serao gravadas
+     * @return true se a gravacao foi bem sucedida, false caso contrario
+     */
+    public boolean salvarEmArquivo(String caminho) {
+        try {
+            PersistenciaJSON.salvar(desenhosAtuais, caminho);
+            return true;
+        } catch (IOException e) {
+            msg.setText("Erro ao salvar arquivo: " + e.getMessage());
+            return false;
+        }
+    }
+    /**
+     * Carrega uma lista de figuras a partir de um arquivo JSON (gravado
+     * por salvarEmArquivo) no caminho indicado, substituindo as figuras
+     * atualmente desenhadas na tela (desenhosAtuais) pelas figuras lidas
+     * do arquivo e redesenhando a tela.
+     *
+     * Em caso de erro ao ler ou interpretar o arquivo, a mensagem de erro
+     * e mostrada na label de mensagens (msg) e o metodo retorna false,
+     * sem alterar os desenhos atualmente na tela.
+     *
+     * @param caminho caminho do arquivo de onde as figuras serao lidas
+     * @return true se o carregamento foi bem sucedido, false caso
+     *         contrario
+     */
+    public boolean carregarDeArquivo(String caminho) {
+        try {
+            EDL<FiguraDesenhada> lidas = PersistenciaJSON.carregar(caminho);
+            desenhosAtuais = lidas;
+            primeiraVez = true; // cancela qualquer figura pela metade
+            repaint();
+            return true;
+        } catch (IOException | JSONException e) {
+            msg.setText("Erro ao carregar arquivo: " + e.getMessage());
+            return false;
         }
     }
 }
