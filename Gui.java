@@ -198,7 +198,7 @@ class Gui extends JFrame {
         jbSalvar.addActionListener(e -> {
             JFileChooser seletor = new JFileChooser();
             seletor.setFileFilter(new FileNameExtensionFilter("Arquivos JSON (*.json)", "json"));
-            seletor.setSelectedFile(new File("desenho.json"));
+            seletor.setSelectedFile(new File(""));
             int opcao = seletor.showSaveDialog(this);
             if (opcao == JFileChooser.APPROVE_OPTION) {
                 String caminho = seletor.getSelectedFile().getAbsolutePath();
