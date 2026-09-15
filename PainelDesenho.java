@@ -340,6 +340,32 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     }
 
     /**
+     * Redesenha somente os tipos de primitivo escolhidos na GUI.
+     * Os tipos desmarcados nao entram novamente em desenhosAtuais.
+     */
+    void redesenharSelecionados(boolean ponto, boolean reta, boolean circulo,
+                                boolean retangulo, boolean triangulo) {
+        if (!desenhosSalvos.estaVazia()) {
+            desenhosAtuais = new EDL<>();
+
+            for (int i = 0; i < desenhosSalvos.tamanho(); i++) {
+                FiguraDesenhada figura = desenhosSalvos.obter(i);
+                TipoPrimitivo tipoFigura = figura.getTipo();
+
+                if ((tipoFigura == TipoPrimitivo.PONTO && ponto)
+                        || (tipoFigura == TipoPrimitivo.RETA && reta)
+                        || (tipoFigura == TipoPrimitivo.CIRCULO && circulo)
+                        || (tipoFigura == TipoPrimitivo.RETANGULO && retangulo)
+                        || (tipoFigura == TipoPrimitivo.TRIANGULO && triangulo)) {
+                    desenhosAtuais.inserir(figura);
+                }
+            }
+
+            repaint();
+        }
+    }
+
+    /**
      * Salva a lista de figuras atualmente desenhadas na tela
      * (desenhosAtuais) em um arquivo JSON no caminho indicado, usando a
      * classe PersistenciaJSON.

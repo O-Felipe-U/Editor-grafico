@@ -1,13 +1,16 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.GridLayout;
 import java.io.File;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JToolBar;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -53,6 +56,13 @@ class Gui extends JFrame {
     private JButton jbRedesenhar = new JButton("Redesenhar");
     private JButton jbCor = new JButton("Cor");
     private JButton jbSair = new JButton("Sair");
+
+    // CheckBoxes para escolher quais tipos de primitivo serao redesenhados
+    private JCheckBox jcbPonto = new JCheckBox("Ponto", true);
+    private JCheckBox jcbReta = new JCheckBox("Reta", true);
+    private JCheckBox jcbCirculo = new JCheckBox("Circulo", true);
+    private JCheckBox jcbRetangulo = new JCheckBox("Retangulo", true);
+    private JCheckBox jcbTriangulo = new JCheckBox("Triangulo", true);
 
     // Botoes para persistencia em arquivo JSON (salvar/abrir os desenhos)
     private JButton jbSalvar = new JButton("Salvar");
@@ -144,8 +154,31 @@ class Gui extends JFrame {
             jsEsp.setValue(1); // inicia slider (necessario para limpar ultimo primitivoda tela)
         });
         jbRedesenhar.addActionListener(e -> {
-            // traz de volta os desenhos guardados no ultimo "Limpar"
-            areaDesenho.redesenhar();
+            // Abre uma janela para escolher quais tipos de primitivo serao redesenhados
+            JPanel painelSelecao = new JPanel(new GridLayout(0, 1));
+            painelSelecao.add(jcbPonto);
+            painelSelecao.add(jcbReta);
+            painelSelecao.add(jcbCirculo);
+            painelSelecao.add(jcbRetangulo);
+            painelSelecao.add(jcbTriangulo);
+
+            int opcao = JOptionPane.showConfirmDialog(
+                    this,
+                    painelSelecao,
+                    "Selecionar primitivos",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE
+            );
+
+            if (opcao == JOptionPane.OK_OPTION) {
+                areaDesenho.redesenharSelecionados(
+                        jcbPonto.isSelected(),
+                        jcbReta.isSelected(),
+                        jcbCirculo.isSelected(),
+                        jcbRetangulo.isSelected(),
+                        jcbTriangulo.isSelected()
+                );
+            }
         });
         jbCor.addActionListener(e -> {
             Color c = JColorChooser.showDialog(null, "Escolha uma cor", msg.getForeground());
