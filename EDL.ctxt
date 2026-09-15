@@ -1,0 +1,23 @@
+#BlueJ class context
+#Mon Sep 14 23:10:01 BRT 2026
+comment0.target=EDL
+comment0.text=\r\n EDL - Estrutura de Dados em Lista.\r\n\r\n Implementacao propria (na mao) de uma lista generica baseada em array,\r\n parecida com um ArrayList simplificado\: comeca com uma capacidade\r\n inicial e DOBRA de tamanho automaticamente quando fica cheia.\r\n\r\n Usada pelo PainelDesenho para guardar as figuras desenhadas na tela\r\n (cada figura vira um objeto FiguraDesenhada), permitindo\:\r\n - "Limpar"\: guarda a lista atual de figuras em uma EDL separada antes de\r\n   apagar a tela;\r\n - "Redesenhar"\: recupera as figuras guardadas nessa EDL e as desenha de\r\n   volta na tela.\r\n\r\n @param <T> tipo dos elementos armazenados na lista\r\n\r\n @author Felipe Estima Correia Urzi\r\n @author Igor Dias da Silva\r\n @author Pedro Henrique Freire\r\n @author Thierry Nadjarian\r\n\r\n @version 20220815\r\n
+comment1.target=EDL()
+comment1.text=\r\n Constroi uma EDL vazia, com a capacidade inicial padrao\r\n
+comment2.params=elemento
+comment2.target=void inserir(java.lang.Object)
+comment2.text=\r\n Insere um elemento no final da lista.\r\n Se o array interno estiver cheio, a capacidade e dobrada\r\n automaticamente antes de inserir.\r\n\r\n @param elemento elemento a ser inserido\r\n
+comment3.target=void aumentarCapacidade()
+comment3.text=\r\n Dobra a capacidade do array interno, copiando os elementos\r\n existentes para o novo array (maior)\r\n
+comment4.params=indice
+comment4.target=java.lang.Object obter(int)
+comment4.text=\r\n Retorna o elemento guardado na posicao indicada\r\n\r\n @param indice posicao do elemento (0 \= primeiro elemento)\r\n @return elemento guardado na posicao "indice"\r\n
+comment5.target=int tamanho()
+comment5.text=\r\n Retorna a quantidade de elementos guardados na lista\r\n\r\n @return quantidade de elementos\r\n
+comment6.target=boolean estaVazia()
+comment6.text=\r\n Informa se a lista esta vazia\r\n\r\n @return true se nao ha nenhum elemento guardado\r\n
+comment7.target=void limpar()
+comment7.text=\r\n Remove todos os elementos da lista (a lista volta a ficar vazia)\r\n
+comment8.target=EDL copiar()
+comment8.text=\r\n Cria e retorna uma NOVA EDL, copia independente desta (mesmos\r\n elementos, mas em um array diferente). Usada para "guardar" um\r\n "retrato" dos desenhos atuais sem que alteracoes futuras em uma\r\n lista afetem a outra.\r\n\r\n @return copia independente desta EDL\r\n
+numComments=9

@@ -1,0 +1,56 @@
+#BlueJ class context
+#Mon Sep 14 23:10:59 BRT 2026
+comment0.target=PainelDesenho
+comment0.text=\r\n Cria desenhos de acordo com o tipo e eventos do mouse\r\n\r\n @author Felipe Estima Correia Urzi\r\n @author Igor Dias da Silva\r\n @author Pedro Henrique Freire\r\n @author Thierry Nadjarian\r\n\r\n @version 20220815\r\n
+comment1.params=msg tipo corAtual esp
+comment1.target=PainelDesenho(javax.swing.JLabel, TipoPrimitivo, java.awt.Color, int)
+comment1.text=\r\n Constroi o painel de desenho\r\n\r\n @param msg mensagem a ser escrita no rodape do painel\r\n @param tipo tipo atual do primitivo\r\n @param corAtual cor atual do primitivo\r\n @param esp espessura atual do primitivo\r\n
+comment10.params=g
+comment10.target=void paintComponent(java.awt.Graphics)
+comment10.text=\r\n Metodo chamado quando o paint eh acionado.\r\n\r\n Limpa o fundo do painel (super.paintComponent), redesenha TODAS as\r\n figuras ja concluidas guardadas em desenhosAtuais, e por cima delas\r\n desenha a figuraEmAndamento (a previa do arrasto atual, se houver).\r\n Como isso acontece a cada repaint(), a previa "acompanha" o mouse\r\n sem deixar rastro e sem apagar o que ja estava desenhado.\r\n\r\n @param g biblioteca para desenhar em modo grafico\r\n
+comment11.params=e
+comment11.target=void mousePressed(java.awt.event.MouseEvent)
+comment11.text=\r\n Evento\: pressionar do mouse.\r\n\r\n PONTO e concluido de imediato (nao precisa de arrasto nem 2o clique).\r\n\r\n Para as demais formas, este metodo decide entre dois casos\:\r\n - Se aguardandoSegundoClique \=\= true\: este e o "2o clique" do modo\r\n   clique-clique (usuario tinha clicado e solto sem arrastar, e\r\n   moveu o mouse ate aqui). FECHA a figura agora.\r\n - Caso contrario\: este e um clique NOVO (1o clique de uma figura).\r\n   Guarda (x1,y1), zera houveArrasto e comeca a previa.\r\n\r\n @param e dados do evento\r\n
+comment12.params=e
+comment12.target=void mouseReleased(java.awt.event.MouseEvent)
+comment12.text=\r\n Evento\: soltar o mouse.\r\n\r\n So faz algo se houver uma figura em andamento E nao estivermos ja\r\n esperando o 2o clique (ou seja, so reage ao soltar do PRIMEIRO\r\n clique).\r\n\r\n - Se houveArrasto \=\= true\: o usuario arrastou de verdade -> finaliza\r\n   a figura agora mesmo, igual ao comportamento "estilo Paint".\r\n - Se houveArrasto \=\= false\: foi so um clique seco (sem mover) ->\r\n   NAO finaliza ainda. Liga aguardandoSegundoClique e deixa a previa\r\n   viva; ela vai seguir o mouse (via mouseMoved) ate o 2o clique.\r\n\r\n @param e dados do evento\r\n
+comment13.params=e
+comment13.target=void mouseClicked(java.awt.event.MouseEvent)
+comment14.params=e
+comment14.target=void mouseEntered(java.awt.event.MouseEvent)
+comment15.params=e
+comment15.target=void mouseExited(java.awt.event.MouseEvent)
+comment16.params=e
+comment16.target=void mouseDragged(java.awt.event.MouseEvent)
+comment16.text=\r\n Evento\: arrastar o mouse (botao pressionado + movimento).\r\n\r\n So age se houver figura em andamento e NAO estivermos no modo\r\n clique-clique (esse modo e controlado por mouseMoved, nao por\r\n mouseDragged). So marca houveArrasto \= true quando o mouse ja se\r\n afastou mais que LIMIAR_ARRASTO pixels do ponto inicial - isso\r\n evita que o tremor natural da mao (1-2 pixels) seja confundido com\r\n um arrasto de verdade, o que impediria o modo clique-clique de\r\n funcionar. A previa, porem, e sempre atualizada, arrasto "de\r\n verdade" ou nao.\r\n\r\n @param e dados do evento\r\n
+comment17.params=e
+comment17.target=void mouseMoved(java.awt.event.MouseEvent)
+comment17.text=\r\n Evento mouseMoved\: escreve mensagem no rodape (x, y) do mouse e,\r\n se estivermos no modo clique-clique (aguardando o 2o clique), faz a\r\n previa "seguir" o cursor ate o usuario clicar de novo.\r\n\r\n @param e dados do evento do mouse\r\n
+comment18.params=g f
+comment18.target=void desenharFigura(java.awt.Graphics, FiguraDesenhada)
+comment18.text=\r\n Desenha uma unica figura (registro FiguraDesenhada) chamando a\r\n classe "Figura*" correta de acordo com o tipo do primitivo.\r\n\r\n @param g biblioteca para desenhar em modo grafico\r\n @param f figura (com todos os dados) a ser desenhada\r\n
+comment19.target=void limparTela()
+comment19.text=\r\n Chamado pelo botao "Limpar"\: guarda uma copia dos desenhos atuais na\r\n EDL desenhosSalvos (para permitir "Redesenhar" depois) e em seguida\r\n esvazia a tela.\r\n
+comment2.params=tipo
+comment2.target=void setTipo(TipoPrimitivo)
+comment2.text=\r\n Altera o tipo atual do primitivo\r\n\r\n @param tipo tipo do primitivo\r\n
+comment20.target=void redesenhar()
+comment20.text=\r\n Chamado pelo botao "Redesenhar"\: recupera as figuras guardadas em\r\n desenhosSalvos (no ultimo "Limpar") e as traz de volta para a tela.\r\n
+comment3.target=TipoPrimitivo getTipo()
+comment3.text=\r\n Retorna o tipo do primitivo\r\n\r\n @return tipo do primitivo\r\n
+comment4.params=esp
+comment4.target=void setEsp(int)
+comment4.text=\r\n Altera a espessura do primitivo\r\n\r\n @param esp espessura do primitivo\r\n
+comment5.target=int getEsp()
+comment5.text=\r\n Retorna a espessura do primitivo\r\n\r\n @return espessura do primitivo\r\n
+comment6.params=corAtual
+comment6.target=void setCorAtual(java.awt.Color)
+comment6.text=\r\n Altera a cor atual do primitivo\r\n\r\n @param corAtual cor atual do primitivo\r\n
+comment7.target=java.awt.Color getCorAtual()
+comment7.text=\r\n retorna a cor atual do primitivo\r\n\r\n @return cor atual do primitivo\r\n
+comment8.params=msg
+comment8.target=void setMsg(javax.swing.JLabel)
+comment8.text=\r\n Altera a msg a ser apresentada no rodape\r\n\r\n @param msg mensagem a ser apresentada\r\n
+comment9.target=javax.swing.JLabel getMsg()
+comment9.text=\r\n Retorna a mensagem\r\n\r\n @return mensagem as ser apresentada no rodape\r\n
+numComments=21
