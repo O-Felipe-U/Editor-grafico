@@ -41,12 +41,21 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
 
     // Para ponto
     int x, y;
+    // distancia minima (em pixels) que o mouse precisa se afastar do
+    // ponto inicial para contar como "arrasto de verdade". Sem isso, o
+    // tremor natural da mao entre pressionar e soltar (1-2 pixels) ja
+    // fazia todo clique ser tratado como arrasto.
+    private static final int LIMIAR_ARRASTO = 4;
 
-    // Para reta / circulo / retangulo / triangulo (todos usam 2 pontos: 1o e 2o clique)
+    // Todas as figuras ja concluidas e desenhadas no painel
+    private List<FiguraDesenhada> figuras = new ArrayList<>();
+
+
+    // Para ponto
+    int x, y;
+
+    // Para reta / circulo / retangulo / triangulo (todos usam 2 pontos: clique inicial e posicao atual do arrasto)
     int x1, y1, x2, y2;
-
-    // selecionar primeiro click do mouse
-    boolean primeiraVez = true;
 
     // Lista (EDL) com todas as figuras JA CONCLUIDAS e atualmente desenhadas na tela.
     // Cada primitivo concluido (ponto, ou o "soltar" do mouse de reta/circulo/
@@ -59,11 +68,21 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     // trazer essas figuras de volta para a tela.
     private EDL<FiguraDesenhada> desenhosSalvos = new EDL<>();
 
-    // Figura "em andamento": a previa que aparece enquanto o mouse esta
-    // sendo arrastado (do 1o clique ate o momento atual do arrasto).
-    // Fica FORA da lista desenhosAtuais - so entra na lista quando o
-    // mouse e solto. Enquanto for null, nao ha arrasto em curso.
+    // Figura "em andamento": a previa que aparece enquanto o usuario esta
+    // definindo a forma (seja arrastando o mouse, seja no intervalo entre
+    // o 1o e o 2o clique). Fica FORA da lista desenhosAtuais - so entra na
+    // lista quando a figura e finalizada. Enquanto for null, nao ha nada
+    // em andamento.
     private FiguraDesenhada figuraEmAndamento = null;
+
+    // true assim que o mouse se MOVE com o botao pressionado (prova de
+    // que o usuario esta arrastando, e nao apenas clicando)
+    private boolean houveArrasto = false;
+
+    // true quando o usuario soltou o mouse SEM arrastar (so um clique) e
+    // o painel esta esperando o 2o clique para fechar a figura - modo
+    // "clique-clique" (estilo ferramentas antigas de desenho)
+    private boolean aguardandoSegundoClique = false;
 
 
     /**
@@ -85,13 +104,9 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
         this.addMouseMotionListener(this);
     }
 
-    /**
-     * Altera o tipo atual do primitivo
-     *
-     * @param tipo tipo do primitivo
-     */
-    public void setTipo(TipoPrimitivo tipo){
+    public void setTipo(TipoPrimitivo tipo) {
         this.tipo = tipo;
+        cancelarSelecao(); // troca de tipo cancela um 1o clique pendente
     }
 
     /**
@@ -187,10 +202,14 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     /**
      * Evento: pressionar do mouse.
      *
-     * PONTO e concluido de imediato (nao precisa de arrasto).
-     * Para as demais formas, este e o "1o clique": guarda (x1,y1) e
-     * comeca a previa (figuraEmAndamento) com x2=y2=x1,y1 - ela sera
-     * atualizada a cada mouseDragged.
+     * PONTO e concluido de imediato (nao precisa de arrasto nem 2o clique).
+     *
+     * Para as demais formas, este metodo decide entre dois casos:
+     * - Se aguardandoSegundoClique == true: este e o "2o clique" do modo
+     *   clique-clique (usuario tinha clicado e solto sem arrastar, e
+     *   moveu o mouse ate aqui). FECHA a figura agora.
+     * - Caso contrario: este e um clique NOVO (1o clique de uma figura).
+     *   Guarda (x1,y1), zera houveArrasto e comeca a previa.
      *
      * @param e dados do evento
      */
@@ -244,9 +263,11 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     @Override
     public void mouseClicked(MouseEvent e) {
     }
+
     @Override
     public void mouseEntered(MouseEvent e) {
     }
+
     @Override
     public void mouseExited(MouseEvent e) {
     }
@@ -254,16 +275,26 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     /**
      * Evento: arrastar o mouse (botao pressionado + movimento).
      *
-     * Apenas ATUALIZA a previa (figuraEmAndamento) com a posicao atual do
-     * mouse e manda repintar. Como a previa nao esta em desenhosAtuais,
-     * nada e "empilhado" na lista - so o desenho final, em mouseReleased.
+     * So age se houver figura em andamento e NAO estivermos no modo
+     * clique-clique (esse modo e controlado por mouseMoved, nao por
+     * mouseDragged). So marca houveArrasto = true quando o mouse ja se
+     * afastou mais que LIMIAR_ARRASTO pixels do ponto inicial - isso
+     * evita que o tremor natural da mao (1-2 pixels) seja confundido com
+     * um arrasto de verdade, o que impediria o modo clique-clique de
+     * funcionar. A previa, porem, e sempre atualizada, arrasto "de
+     * verdade" ou nao.
      *
      * @param e dados do evento
      */
     public void mouseDragged(MouseEvent e) {
-        if (figuraEmAndamento != null) {
+        if (figuraEmAndamento != null && !aguardandoSegundoClique) {
             x2 = e.getX();
             y2 = e.getY();
+
+            if (Math.abs(x2 - x1) > LIMIAR_ARRASTO || Math.abs(y2 - y1) > LIMIAR_ARRASTO) {
+                houveArrasto = true;
+            }
+
             figuraEmAndamento = new FiguraDesenhada(tipo, x1, y1, x2, y2, "", getEsp(), getCorAtual());
             repaint();
         }
@@ -275,6 +306,7 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
      *
      * @param e dados do evento do mouse
      */
+    @Override
     public void mouseMoved(MouseEvent e) {
         this.msg.setText("("+e.getX() + ", " + e.getY() + ") - " + getTipo());
     }

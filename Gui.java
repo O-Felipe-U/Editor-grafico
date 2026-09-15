@@ -125,16 +125,16 @@ class Gui extends JFrame {
         add(areaDesenho, BorderLayout.CENTER);
         add(msg, BorderLayout.SOUTH);
 
-        // Adiciona "tratador" ("ouvidor") de eventos para
+        // Adiciona "tratador" ("ouvidor") de eventos para 
         // cada componente
         jbPonto.addActionListener(e -> {
             tipoAtual = TipoPrimitivo.PONTO;
             areaDesenho.setTipo(tipoAtual);
-        });
+        });        
         jbReta.addActionListener(e -> {
             tipoAtual = TipoPrimitivo.RETA;
             areaDesenho.setTipo(tipoAtual);
-        });
+        });        
         jbCirculo.addActionListener(e -> {
             tipoAtual = TipoPrimitivo.CIRCULO;
             areaDesenho.setTipo(tipoAtual);
@@ -181,17 +181,17 @@ class Gui extends JFrame {
             }
         });
         jbCor.addActionListener(e -> {
-            Color c = JColorChooser.showDialog(null, "Escolha uma cor", msg.getForeground());
-            if (c != null){
-                corAtual = c; // pega do chooserColor
+            Color c = JColorChooser.showDialog(null, "Escolha uma cor", msg.getForeground()); 
+            if (c != null){ 
+                corAtual = c; // pega do chooserColor 
             }
             areaDesenho.setCorAtual(corAtual); // cor atual
-        });
+        });  
         jsEsp.addChangeListener(e -> {
             espAtual = jsEsp.getValue();
             jlEsp.setText("   Espessura: " + String.format("%-5s", espAtual));
-            areaDesenho.setEsp(espAtual);
-        });
+            areaDesenho.setEsp(espAtual);        
+        });        
 
         // Botao "Salvar": abre um seletor de arquivo e grava os desenhos
         // atuais em um arquivo JSON no caminho escolhido pelo usuario
@@ -231,6 +231,6 @@ class Gui extends JFrame {
 
         jbSair.addActionListener(e -> {
             System.exit(0);
-        });
+        });        
     }
 }
