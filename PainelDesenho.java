@@ -50,10 +50,6 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
     // Todas as figuras ja concluidas e desenhadas no painel
     private List<FiguraDesenhada> figuras = new ArrayList<>();
 
-
-    // Para ponto
-    int x, y;
-
     // Para reta / circulo / retangulo / triangulo (todos usam 2 pontos: clique inicial e posicao atual do arrasto)
     int x1, y1, x2, y2;
 
@@ -106,7 +102,7 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
 
     public void setTipo(TipoPrimitivo tipo) {
         this.tipo = tipo;
-        cancelarSelecao(); // troca de tipo cancela um 1o clique pendente
+        //cancelarSelecao(); // troca de tipo cancela um 1o clique pendente
     }
 
     /**
@@ -435,7 +431,7 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
         try {
             EDL<FiguraDesenhada> lidas = PersistenciaJSON.carregar(caminho);
             desenhosAtuais = lidas;
-            primeiraVez = true; // cancela qualquer figura pela metade
+            //primeiraVez = true; // cancela qualquer figura pela metade
             repaint();
             return true;
         } catch (IOException | JSONException e) {
