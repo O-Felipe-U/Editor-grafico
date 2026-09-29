@@ -335,8 +335,16 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
                 break;
 
             case TRIANGULO:
-                // (x1,y1) e (x2,y2) definem o retangulo envolvente do triangulo
-                FiguraTriangulos.desenharTriangulo(g, new Ponto(f.getX1(), f.getY1()), new Ponto(f.getX2(), f.getY2()), f.getNome(), f.getEsp(), f.getCor());
+                if (f.temTerceiroPonto()) {
+                    // Triangulo vindo de arquivo: o JSON fornece p1, p2 e p3
+                    // explicitamente, por isso desenhamos exatamente esses lados.
+                    FiguraRetas.desenharReta(g, f.getX1(), f.getY1(), f.getX2(), f.getY2(), f.getNome(), f.getEsp(), f.getCor());
+                    FiguraRetas.desenharReta(g, f.getX2(), f.getY2(), f.getX3(), f.getY3(), "", f.getEsp(), f.getCor());
+                    FiguraRetas.desenharReta(g, f.getX3(), f.getY3(), f.getX1(), f.getY1(), "", f.getEsp(), f.getCor());
+                } else {
+                    // Triangulo criado normalmente no editor: preserva o comportamento antigo.
+                    FiguraTriangulos.desenharTriangulo(g, new Ponto(f.getX1(), f.getY1()), new Ponto(f.getX2(), f.getY2()), f.getNome(), f.getEsp(), f.getCor());
+                }
                 break;
 
             default:
@@ -406,7 +414,7 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
      */
     public boolean salvarEmArquivo(String caminho) {
         try {
-            PersistenciaJSON.salvar(desenhosAtuais, caminho);
+            PersistenciaJSON.salvar(desenhosAtuais, caminho, getWidth(), getHeight());
             return true;
         } catch (IOException e) {
             msg.setText("Erro ao salvar arquivo: " + e.getMessage());
@@ -429,12 +437,28 @@ public class PainelDesenho extends JPanel implements MouseListener, MouseMotionL
      */
     public boolean carregarDeArquivo(String caminho) {
         try {
-            EDL<FiguraDesenhada> lidas = PersistenciaJSON.carregar(caminho);
+            int larguraAtual = getWidth();
+            int alturaAtual = getHeight();
+
+            if (larguraAtual <= 0 || alturaAtual <= 0) {
+                msg.setText("Erro ao carregar arquivo: area de desenho sem tamanho valido.");
+                return false;
+            }
+
+            EDL<FiguraDesenhada> lidas = PersistenciaJSON.carregar(caminho, larguraAtual, alturaAtual);
+
+            // So substitui o desenho atual depois que TODO o arquivo foi lido
+            // com sucesso. Tambem cancela qualquer figura que estivesse sendo
+            // arrastada quando o usuario clicou em Abrir.
             desenhosAtuais = lidas;
-            //primeiraVez = true; // cancela qualquer figura pela metade
+            figuraEmAndamento = null;
+            houveArrasto = false;
+            aguardandoSegundoClique = false;
+
             repaint();
+            msg.setText("Arquivo aberto com sucesso.");
             return true;
-        } catch (IOException | JSONException e) {
+        } catch (IOException | JSONException | IllegalArgumentException e) {
             msg.setText("Erro ao carregar arquivo: " + e.getMessage());
             return false;
         }
