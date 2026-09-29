@@ -110,7 +110,7 @@ class Gui extends JFrame {
         barraComandos.add(jbTriangulo); // Botao de Triangulo
         barraComandos.add(jbLimpar); // Botao de Limpar
         barraComandos.add(jbRedesenhar); // Botao de Redesenhar (traz de volta o ultimo desenho limpo)
-        //barraComandos.add(jbCor); // Botao de Cores
+        barraComandos.add(jbCor); // Botao de Cores
 
         barraComandos.add(jbSalvar); // Botao de Salvar (persistencia em JSON)
         barraComandos.add(jbAbrir); // Botao de Abrir (carrega desenhos de um arquivo JSON)
@@ -198,7 +198,7 @@ class Gui extends JFrame {
         jbSalvar.addActionListener(e -> {
             JFileChooser seletor = new JFileChooser();
             seletor.setFileFilter(new FileNameExtensionFilter("Arquivos JSON (*.json)", "json"));
-            seletor.setSelectedFile(new File("desenho.json"));
+            seletor.setSelectedFile(new File(""));
             int opcao = seletor.showSaveDialog(this);
             if (opcao == JFileChooser.APPROVE_OPTION) {
                 String caminho = seletor.getSelectedFile().getAbsolutePath();
@@ -216,14 +216,21 @@ class Gui extends JFrame {
             JFileChooser seletor = new JFileChooser();
             seletor.setFileFilter(new FileNameExtensionFilter("Arquivos JSON (*.json)", "json"));
             int opcao = seletor.showOpenDialog(this);
+
             if (opcao == JFileChooser.APPROVE_OPTION) {
                 File arquivo = seletor.getSelectedFile();
-                if (validaArquivoJson(arquivo)) {
-                    areaDesenho.carregarDeArquivo(arquivo.getAbsolutePath());
-                } else {
+
+                // O filtro ajuda o usuario a localizar arquivos .json, mas quem
+                // decide se o conteudo e valido e o proprio carregamento. Isso
+                // tambem permite abrir um JSON valido que tenha sido salvo sem
+                // extensao por engano.
+                boolean abriu = areaDesenho.carregarDeArquivo(arquivo.getAbsolutePath());
+
+                if (!abriu) {
                     JOptionPane.showMessageDialog(this,
-                            "O arquivo selecionado nao e um arquivo JSON (.json).\nEscolha um arquivo com essa extensao.",
-                            "Arquivo invalido",
+                            "Nao foi possivel abrir o arquivo selecionado.\n" +
+                                    "Verifique se ele esta no formato JSON esperado pelo editor.",
+                            "Erro ao abrir arquivo",
                             JOptionPane.ERROR_MESSAGE);
                 }
             }
